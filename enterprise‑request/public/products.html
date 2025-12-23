@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Setores</title>
+    <link rel="stylesheet" href="./css/produtos.css">
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <div class="logo-graal-sidebar">
+                <img src="/images/logo_preto.png" alt="Graal">
+            </div>
+            <nav>
+                <ul>
+                    <a href="/deposito">
+                        <li class="nav-item">
+                            <ion-icon name="document-text-outline"></ion-icon>
+                            <span>Requisições</span>
+                        </li>
+                    </a>
+                    <a href="/adm">
+                        <li class="nav-item">
+                            <ion-icon name="settings-outline"></ion-icon>
+                            <span>Admin</span>
+                        </li>
+                    </a>
+                    <a href="/setores">
+                        <li class="nav-item selected">
+                            <ion-icon name="cube-outline"></ion-icon>
+                            <span>Setores</span>
+                        </li>
+                    </a>
+                    <a href="/relatorios">
+                        <li class="nav-item">
+                            <ion-icon name="bar-chart-outline"></ion-icon>
+                            <span>Relatórios</span>
+                        </li>
+                    </a>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <div class="top-bar">
+                <div class="search-box">
+                    <input type="text" placeholder="Pesquisar...">
+                    <button><ion-icon name="search-outline"></ion-icon></button>
+                </div>
+                <div class="user-profile">
+                    <img src="https://via.placeholder.com/40x40.png?text=US" alt="User">
+                    <span>Admin</span>
+                    <ion-icon name="chevron-down-outline"></ion-icon>
+                </div>
+            </div>
+
+            <div id="produtos-content" class="content-section" style="display: block;">
+                <h2>Gerenciamento de Setores</h2>
+                <div class="admin-grid">
+                    <div class="admin-section" style="width: 100%;">
+                        <h3>Setores Cadastrados</h3>
+                        <div id="sectors-list">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <div id="products-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3 id="modal-title">Produtos do Setor <span id="selected-sector-name"></span></h3>
+            <div id="products-list">
+                </div>
+        </div>
+    </div>
+    
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3>Editar Produto</h3>
+            <div class="edit-form-container">
+                <div class="input-group">
+                    <label for="edit-product-name">Nome do Produto:</label>
+                    <input type="text" id="edit-product-name">
+                </div>
+                <div class="input-group">
+                    <label for="edit-product-unit">Unidade:</label>
+                    <input type="text" id="edit-product-unit">
+                </div>
+                <button class="btn btn-primary" id="save-edit-btn">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <h3>Confirmação</h3>
+            <p id="confirm-message"></p>
+            <div class="btn-group">
+                <button class="btn btn-secondary" id="cancel-action-btn">Voltar</button>
+                <button class="btn btn-primary" id="confirm-action-btn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+<div id="success-modal" class="modal">
+    <div class="modal-content">
+        <h3>Sucesso!</h3>
+        <p id="success-message"></p>
+        <div class="btn-group" style="justify-content: flex-end;">
+            <button class="btn btn-primary" id="success-ok-btn">OK</button>
+        </div>
+    </div>
+</div>
+<div id="edit-sector-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h3>Editar Setor</h3>
+        <div class="edit-form-container">
+            <div class="input-group">
+                <label for="edit-sector-name">Nome do Setor:</label>
+                <input type="text" id="edit-sector-name">
+            </div>
+            <button class="btn btn-primary" id="save-sector-edit-btn">Salvar Alterações</button>
+        </div>
+    </div>
+</div>
+    
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script src="./js/products.js"></script>
+</body>
+</html>

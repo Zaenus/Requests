@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - Requisições Aprovadas</title>
+    <link rel="stylesheet" href="./css/reports.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <!-- ==== SIDEBAR ==== -->
+    <div class="sidebar">
+        <div class="logo-graal-sidebar"><img src="./images/logo_preto.png" alt="Graal"></div>
+        <nav>
+            <ul>
+                <a href="/deposito">
+                    <li class="nav-item"><ion-icon name="document-text-outline"></ion-icon><span>Requisições</span>
+                    </li>
+                </a>
+                <a href="/adm">
+                    <li class="nav-item"><ion-icon name="settings-outline"></ion-icon><span>Admin</span>
+                    </li>
+                </a>
+                <a href="/setores">
+                    <li class="nav-item"><ion-icon name="cube-outline"></ion-icon><span>Setores</span>
+                    </li>
+                </a>
+                <a href="/relatorios">
+                    <li class="nav-item selected"><ion-icon name="bar-chart-outline"></ion-icon><span>Relatórios</span>
+                    </li>
+                </a>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- ==== MAIN CONTENT ==== -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="search-box"><input type="text" placeholder="Pesquisar..."><button><ion-icon name="search-outline"></ion-icon></button></div>
+            <div class="user-profile"><span>Depósito</span><ion-icon name="chevron-down-outline"></ion-icon></div>
+        </div>
+
+        <div class="content-section">
+            <h2>Relatórios - Requisições Aprovadas</h2>
+
+        <!-- ==== FILTER SECTION ==== -->
+        <div class="admin-section">
+            <div class="filter-grid">
+                <div class="input-group">
+                    <label>Setor</label>
+                    <select id="filter-sector"></select>
+                </div>
+                <div class="input-group">
+                    <label>Data Inicial</label>
+                    <input type="date" id="filter-start">
+                </div>
+                <div class="input-group">
+                    <label>Data Final</label>
+                    <input type="date" id="filter-end">
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button id="btn-filter" class="btn btn-primary">Aplicar</button>
+                <button id="btn-export" class="btn btn-primary" style="background:#28a745;">
+                    <ion-icon name="download-outline"></ion-icon> Exportar CSV
+                </button>
+                <button id="btn-export-pdf" class="btn btn-primary" style="background:#dc3545;">
+                    <ion-icon name="document-outline"></ion-icon> PDF
+                </button>
+            </div>
+        </div>
+
+            <!-- ==== RESULTS TABLE ==== -->
+            <div class="requisition-table-container">
+                <table class="requisition-table">
+                    <thead>
+                        <tr>
+                            <th>Req. ID</th>
+                            <th>Setor</th>
+                            <th>Data/Hora</th>
+                            <th>Produto</th>
+                            <th>Quantidade</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-table-body"></tbody>
+                </table>
+            </div>
+        </div> 
+            <!-- ==== MONTHLY SUMMARY SECTION ==== -->
+            <div class="admin-section" style="margin-top: 2rem;">
+                <h3 style="cursor:pointer; display:flex; align-items:center; gap:8px;" onclick="toggleSummary()">
+                    <ion-icon name="chevron-down-outline" id="summary-toggle-icon"></ion-icon>
+                    Resumo Mensal de Uso por Produto
+                </h3>
+                <div id="monthly-summary" style="display:none;">
+
+                    <!-- Heatmap Chart -->
+                    <div class="chart-container" style="height:350px; margin:1.5rem 0;">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+
+                    <!-- Pivot Table -->
+                    <div class="requisition-table-container">
+                        <table class="requisition-table" id="monthly-pivot">
+                            <thead id="pivot-head"></thead>
+                            <tbody id="pivot-body"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Drill-down Details -->
+                    <div id="daily-details" class="admin-section" style="margin-top:1.5rem; display:none;">
+                        <h4>Uso Diário: <span id="detail-product"></span> em <span id="detail-month"></span></h4>
+                        <div class="requisition-table-container">
+                            <table class="requisition-table">
+                                <thead><tr><th>Data</th><th>Req. ID</th><th>Qtd</th></tr></thead>
+                                <tbody id="detail-items-body"></tbody>
+                            </table>
+                        </div>
+                        <button class="btn btn-primary" onclick="closeDetails()" style="margin-top:1rem;">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+<script src="./js/reports.js"></script>
+
+</body>
+</html>

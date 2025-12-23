@@ -1,0 +1,36 @@
+#2025-10-16:
+
+  --> Fixed some issues in displaying modal-content of requests, added some
+ overflow-y;
+
+#2025-10-23:
+
+  --> Added the option for edit items in autorizacao page;
+
+#2025-10-28:
+
+  --> Added reports page, route and CSS;
+
+#2025-10-29:
+
+  --> Added request history in deposit page;
+  --> Changed products page name in server routes to "setores"
+and changed in the nav tab;
+
+#2025-10-30:
+
+  --> Added overflow to search products and selected products results
+ in requests page;
+  --> added edit mode to requests that are approved in deposit page;
+  --> Added div to display success message when adding products in the
+ request;
+  --> adjusted the time that was being stored wrongly in the database;
+
+#2025-11-11:
+
+ --> Adjusted the overflow from the modal on sectors page in order to
+display the list correctly when we have many products in the sector;
+
+#Future updates:
+
+

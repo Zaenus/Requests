@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Depósito</title>
+    <link rel="stylesheet" href="./css/deposito.css">
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <div class="logo-graal-sidebar">
+                <img src="./images/logo_preto.png" alt="Graal">
+            </div>
+            <nav>
+                <ul>
+                    <a href="/deposito">
+                        <li class="nav-item selected">
+                            <ion-icon name="document-text-outline"></ion-icon>
+                            <span>Requisições</span>
+                        </li>
+                    </a>
+                    <a href="/adm">
+                        <li class="nav-item">
+                            <ion-icon name="settings-outline"></ion-icon>
+                            <span>Admin</span>
+                        </li>
+                    </a>
+                    <a href="/setores">
+                        <li class="nav-item">
+                            <ion-icon name="cube-outline"></ion-icon>
+                            <span>Setores</span>
+                        </li>
+                    </a>
+                    <a href="/relatorios">
+                        <li class="nav-item">
+                            <ion-icon name="bar-chart-outline"></ion-icon>
+                            <span>Relatórios</span>
+                        </li>
+                    </a>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <div class="top-bar">
+                <div class="search-box">
+                    <input type="text" placeholder="Pesquisar...">
+                    <button><ion-icon name="search-outline"></ion-icon></button>
+                </div>
+                <div class="user-profile">
+                    <span>Depósito</span>
+                    <ion-icon name="chevron-down-outline"></ion-icon>
+                </div>
+            </div>
+
+            <div id="requisicoes-content" class="content-section">
+                <h2>Requisições</h2>
+                <div class="requisition-table-container">
+                    <table class="requisition-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Setor</th>
+                                <th>Data/Hora</th>
+                                <th>Itens</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requisitions-table-body">
+                            </tbody>
+                    </table>
+                </div>
+                <!-- ====== HISTORIC TABLE (collapsible) ====== -->
+                <div id="historic-section" style="margin-top: 40px;">
+                    <div class="summary-header" onclick="toggleHistoric()" style="cursor:pointer; user-select:none;">
+                        <h3 style="display:inline; margin:0;">Histórico de Requisições</h3>
+                        <ion-icon id="historic-toggle-icon" name="chevron-down-outline" style="margin-left:8px; font-size:1.2em; vertical-align:middle;"></ion-icon>
+                    </div>
+
+                    <div id="historic-panel" style="display:none;">
+                        <div class="requisition-table-container">
+                            <table class="requisition-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Setor</th>
+                                        <th>Data/Hora</th>
+                                        <th>Itens</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historic-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for request details -->
+    <div id="request-modal" class="request-modal" style="display: none;">
+        <div class="modal-content">
+            <span id="request-modal-close" class="modal-close">&times;</span>
+            <h3>Detalhes da Requisição</h3>
+            <div id="request-details"></div>
+            <div id="edit-items-container"></div>
+            <button id="request-modal-ok" class="btn btn-primary">Fechar</button>
+            <button id="request-modal-end" class="btn btn-secondary">Finalizar</button>
+        </div>
+    </div>
+
+    <!-- Modal for success/error messages -->
+    <div id="message-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span id="modal-close" class="modal-close">&times;</span>
+        <h3 id="modal-title"></h3>
+        <p id="modal-message"></p>
+        <button id="modal-ok-btn" class="btn btn-primary">OK</button>
+        <button id="modal-cancel-btn" class="btn btn-secondary">Cancelar</button>
+    </div>
+    </div>
+    
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script src="./js/deposit.js"></script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Requisição de Produtos</title>
+    <link rel="stylesheet" href="css/style.css">
+
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body>
+    <div class="main-container">
+        <div id="form-section" class="form-card">
+            <header class="form-header">
+                <h1>REQUISIÇÃO</h1>
+                <p>Preencha os campos para solicitar produtos</p>
+            </header>
+
+            <div class="form-fields">
+                <div class="field-group">
+                    <label for="setor">Setor</label>
+                    <select id="setor" required>
+                        <option value="">Selecione o setor</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label for="data">Data</label>
+                    <input type="text" id="data" readonly>
+                </div>
+                <div class="field-group">
+                    <label for="hora">Hora</label>
+                    <input type="text" id="hora" readonly>
+                </div>
+                <div class="field-group">
+                    <span>Turno</span>
+                    <div class="checkbox-group">
+                        <label class="turno-button"><input type="checkbox" name="turno" value="Manhã"> Manhã</label>
+                        <label class="turno-button"><input type="checkbox" name="turno" value="Tarde"> Tarde</label>
+                        <label class="turno-button"><input type="checkbox" name="turno" value="Noite"> Noite</label>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label for="funcionario">Funcionário</label>
+                    <input type="text" id="funcionario" required>
+                </div>
+                <div class="field-group">
+                    <label for="responsavel">Responsável</label>
+                    <input type="text" id="responsavel" required>
+                </div>
+            </div>
+
+            <div class="product-search-section">
+                <h3>Adicionar Produtos</h3>
+                <div class="category-search-box-row">
+                    <div class="field-group-inline">
+                        <label for="categoria">Categoria</label>
+                        <select id="categoria">
+                            <option value="">Todas as Categorias</option>
+                        </select>
+                    </div>
+                    <div class="field-group-inline">
+                        <label for="product-search">Pesquise um produto específico</label>
+                        <div class="search-box">
+                            <input type="text" id="product-search" placeholder="Pesquisar produto...">
+                            <button id="search-btn">Pesquisar</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="search-results" class="search-results"></div>
+            </div>
+
+            <div class="selected-products-section">
+                <h3>Produtos Selecionados</h3>
+                <ul id="selected-products-list">
+                </ul>
+            </div>
+            
+            <div class="field-group">
+                <label for="observacoes">Observações (opcional)</label>
+                <textarea id="observacoes" rows="4" placeholder="Adicione observações aqui..."></textarea>
+            </div>
+
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary" id="btn-confirmar">Confirmar Requisição</button>
+            </div>
+        </div>
+
+        <div id="confirm-section" class="form-card" style="display: none;">
+            <header class="form-header">
+                <h1>Confirme os Dados</h1>
+                <p>Revise as informações antes de enviar</p>
+            </header>
+            
+            <div class="confirm-details">
+                <p><strong>Setor:</strong> <span id="confirm-setor"></span></p>
+                <p><strong>Turno:</strong> <span id="confirm-turno"></span></p>
+                <p><strong>Data:</strong> <span id="confirm-data"></span></p>
+                <p><strong>Hora:</strong> <span id="confirm-hora"></span></p>
+                <p><strong>Funcionário:</strong> <span id="confirm-funcionario"></span></p>
+                <p><strong>Responsável:</strong> <span id="confirm-responsavel"></span></p>
+                
+                <h3>Itens Solicitados:</h3>
+                <ul id="confirm-produtos"></ul>
+
+                <div id="confirm-observacoes-section" style="display: none;">
+                    <h3>Observações:</h3>
+                    <p id="confirm-observacoes"></p>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button type="button" class="btn btn-secondary" id="btn-voltar">Voltar e Editar</button>
+                <button type="button" class="btn btn-primary" id="btn-enviar">Enviar Requisição</button>
+            </div>
+        </div>
+        
+        <!-- Modal for messages -->
+        <div id="modal-message" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span id="modal-close" class="modal-close">&times;</span>
+                <p id="modal-text"></p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/request.js"></script>
+</body>
+</html>

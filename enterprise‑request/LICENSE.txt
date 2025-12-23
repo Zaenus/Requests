@@ -1,0 +1,50 @@
+Copyright (c) 2025 VH Code. All rights reserved.
+
+1. GRANT OF LICENSE
+   Subject to the terms and conditions of this License, the Licensor
+   hereby grants you a royalty-free, non-exclusive, non-transferable,
+   non-sublicensable license to:
+   a) use the Software for your personal or internal business purposes;
+   b) make a reasonable number of copies of the Software solely for
+      backup or archival purposes; and
+   c) modify the Software solely for your own use.
+
+2. RESTRICTIONS
+   You may NOT:
+   a) distribute, sell, lease, rent, lend, sublicense, or otherwise
+      transfer the Software or any copy or modified version thereof
+      to any third party;
+   b) publish, upload, or otherwise make the Software available on
+      any public network, repository, or website;
+   c) remove or alter any copyright, trademark, or other proprietary
+      notices contained in the Software;
+   d) use the Software to provide a service to third parties (SaaS,
+      hosting, etc.) unless explicitly authorized in writing by the
+      Licensor.
+
+3. OWNERSHIP
+   The Software is licensed, not sold. The Licensor retains all right,
+   title, and interest in and to the Software, including all
+   intellectual property rights.
+
+4. TERMINATION
+   This License is effective until terminated. Your rights will
+   terminate automatically without notice if you fail to comply with
+   any term hereof. Upon termination, you must destroy all copies of
+   the Software.
+
+5. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY WARRANTIES OF ANY KIND,
+   EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES
+   OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+   NON-INFRINGEMENT.
+
+6. LIMITATION OF LIABILITY
+   IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL,
+   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE
+   OR INABILITY TO USE THE SOFTWARE.
+
+7. GOVERNING LAW
+   This License shall be governed by the laws of Brazil.
+
+--- END OF LICENSE ---
