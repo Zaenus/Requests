@@ -6,7 +6,7 @@ router.get('/approved-items', (req, res) => {
   const { sector_id, start, end } = req.query;
 
   // Build WHERE clauses safely
-  const where = [];
+  const where = ["r.status IN ('done', 'printed')"];
   const params = [];
 
   if (sector_id) {
@@ -22,7 +22,7 @@ router.get('/approved-items', (req, res) => {
     params.push(end);
   }
 
-  const whereSQL = where.length ? 'WHERE ' + where.join(' AND ') : '';
+  const whereSQL = 'WHERE ' + where.join(' AND ');
 
   const sql = `
     SELECT
@@ -37,7 +37,6 @@ router.get('/approved-items', (req, res) => {
     JOIN request_items ri ON r.id = ri.request_id
     JOIN products  p  ON ri.product_id = p.id
     ${whereSQL}
-      AND r.status IN ('done', 'printed')
     ORDER BY r.created_at DESC, r.id
   `;
 
