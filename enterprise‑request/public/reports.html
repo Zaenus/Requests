@@ -56,6 +56,10 @@
                     <select id="filter-sector"></select>
                 </div>
                 <div class="input-group">
+                    <label>Produto</label>
+                    <input type="text" id="filter-product" placeholder="Pesquisar por nome...">
+                </div>
+                <div class="input-group">
                     <label>Data Inicial</label>
                     <input type="date" id="filter-start">
                 </div>
@@ -122,6 +126,38 @@
                             </table>
                         </div>
                         <button class="btn btn-primary" onclick="closeDetails()" style="margin-top:1rem;">Fechar</button>
+                    </div>
+                </div>
+            </div>
+            <!-- ==== PRODUCT BY SECTOR SECTION ==== -->
+            <div class="admin-section" style="margin-top: 2rem;">
+                <h3 style="cursor:pointer; display:flex; align-items:center; gap:8px;" onclick="toggleProductBySector()">
+                    <ion-icon name="chevron-down-outline" id="product-sector-toggle-icon"></ion-icon>
+                    Uso do Produto por Setor
+                </h3>
+                <div id="product-sector-panel" style="display:none;">
+                    <div style="display:flex; gap:1rem; align-items:flex-end; margin-bottom:1rem; flex-wrap:wrap;">
+                        <div class="input-group" style="margin:0; flex:1; min-width:200px;">
+                            <label>Produto</label>
+                            <select id="product-sector-select">
+                                <option value="">Selecione um produto...</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="loadProductBySector()" style="width:auto; height:fit-content;">Ver</button>
+                    </div>
+                    <div id="product-sector-chart-container" style="display:none;">
+                        <div class="chart-container" style="height:300px; margin:1rem 0;">
+                            <canvas id="productSectorChart"></canvas>
+                        </div>
+                        <div class="requisition-table-container">
+                            <table class="requisition-table">
+                                <thead><tr><th>Setor</th><th>Total</th></tr></thead>
+                                <tbody id="product-sector-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="product-sector-empty" style="display:none; text-align:center; color:#666; padding:1rem;">
+                        Nenhum dado encontrado para este produto.
                     </div>
                 </div>
             </div>

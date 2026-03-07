@@ -1,5 +1,6 @@
 /* ---------- GLOBALS ---------- */
 const sectorSelect = document.getElementById('filter-sector');
+const productInput = document.getElementById('filter-product');
 const startInput   = document.getElementById('filter-start');
 const endInput     = document.getElementById('filter-end');
 const tbody        = document.getElementById('report-table-body');
@@ -11,6 +12,7 @@ const detailMonth   = document.getElementById('detail-month');
 const detailBody    = document.getElementById('detail-items-body');
 let currentData = [];
 let chart = null;
+let productSectorChart = null;
 
 /* ---------- TOGGLE SUMMARY ---------- */
 function toggleSummary() {
@@ -48,6 +50,8 @@ async function loadReport() {
     if (sectorSelect.value) params.append('sector_id', sectorSelect.value);
     if (startInput.value)   params.append('start', startInput.value);
     if (endInput.value)     params.append('end',   endInput.value);
+    const productFilter = productInput.value.trim();
+    if (productFilter)      params.append('product', productFilter);
 
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Carregando...</td></tr>';
 
@@ -56,6 +60,7 @@ async function loadReport() {
         if (!res.ok) throw new Error('Erro na API');
         const rows = await res.json();
         currentData = rows;
+        updateProductSectorSelect();
 
         if (rows.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum item encontrado.</td></tr>';
@@ -346,6 +351,98 @@ function downloadFile(content, type, filename) {
     const url = URL.createObjectURL(blob);
     const a = Object.assign(document.createElement('a'), { href: url, download: filename });
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+/* ---------- PRODUCT BY SECTOR ---------- */
+function toggleProductBySector() {
+    const panel = document.getElementById('product-sector-panel');
+    const icon  = document.getElementById('product-sector-toggle-icon');
+    if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        icon.name = 'chevron-up-outline';
+    } else {
+        panel.style.display = 'none';
+        icon.name = 'chevron-down-outline';
+    }
+}
+
+function updateProductSectorSelect() {
+    const select = document.getElementById('product-sector-select');
+    const current = select.value;
+    const products = [...new Set(currentData.map(r => r.produto))].sort();
+    select.innerHTML = '<option value="">Selecione um produto...</option>';
+    products.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        if (p === current) opt.selected = true;
+        select.appendChild(opt);
+    });
+}
+
+async function loadProductBySector() {
+    const product = document.getElementById('product-sector-select').value;
+    if (!product) return;
+
+    const params = new URLSearchParams({ product });
+    if (startInput.value) params.append('start', startInput.value);
+    if (endInput.value)   params.append('end',   endInput.value);
+
+    const chartContainer = document.getElementById('product-sector-chart-container');
+    const emptyMsg = document.getElementById('product-sector-empty');
+    chartContainer.style.display = 'none';
+    emptyMsg.style.display = 'none';
+
+    try {
+        const res = await fetch('/api/reports/product-by-sector?' + params);
+        if (!res.ok) throw new Error('Erro na API');
+        const data = await res.json();
+
+        if (!data.length) {
+            emptyMsg.style.display = 'block';
+            return;
+        }
+
+        chartContainer.style.display = 'block';
+
+        document.getElementById('product-sector-body').innerHTML = data.map(d =>
+            `<tr><td>${d.setor}</td><td>${d.total}</td></tr>`
+        ).join('');
+
+        try {
+            const ctx = document.getElementById('productSectorChart').getContext('2d');
+            if (productSectorChart) productSectorChart.destroy();
+            productSectorChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.setor),
+                    datasets: [{
+                        label: product,
+                        data: data.map(d => d.total),
+                        backgroundColor: 'rgba(91, 85, 227, 0.6)',
+                        borderColor: 'rgba(91, 85, 227, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: `Uso de "${product}" por Setor`
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Setor' } },
+                        y: { beginAtZero: true, title: { display: true, text: 'Quantidade' } }
+                    }
+                }
+            });
+        } catch (_) {
+            // Chart library unavailable; data table is still displayed
+        }
 }
 
 /* ---------- INIT ---------- */
