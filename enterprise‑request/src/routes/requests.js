@@ -77,44 +77,41 @@ router.post('/enviar_requisicao', (req, res) => {
             return res.status(500).json({ error: err.message });
           }
           const request_id = this.lastID;
-          let processed = 0;
-          let errors = [];
 
-          // Insert each product into request_items
-          produtos.forEach(p => {
-            // Validate product_id and sector_id
+          // Insert each product into request_items using promises to avoid
+          // the race condition where COMMIT could be issued before all
+          // INSERT callbacks have completed.
+          const insertPromises = produtos.map(p => new Promise((resolve, reject) => {
             db.get('SELECT id FROM products WHERE id = ? AND sector_id = ?', [p.id, sector_id], (err, productRow) => {
-              if (err) {
-                errors.push(err.message);
-              } else if (!productRow) {
-                errors.push(`Product ID ${p.id} not found in sector ${setor}`);
-              } else {
-                db.run(
-                  `INSERT INTO request_items (request_id, product_id, quantity)
-                   VALUES (?, ?, ?)`,
-                  [request_id, p.id, p.quantidade],
-                  (err) => {
-                    if (err) errors.push(err.message);
-                  }
-                );
-              }
+              if (err) return reject(err);
+              if (!productRow) return reject(new Error(`Product ID ${p.id} not found in sector ${setor}`));
 
-              processed++;
-              if (processed === produtos.length) {
-                if (errors.length > 0) {
-                  db.run('ROLLBACK');
-                  return res.status(400).json({ error: errors.join('; ') });
+              db.run(
+                `INSERT INTO request_items (request_id, product_id, quantity)
+                 VALUES (?, ?, ?)`,
+                [request_id, p.id, p.quantidade],
+                (err) => {
+                  if (err) return reject(err);
+                  resolve();
                 }
-                db.run('COMMIT', (err) => {
-                  if (err) {
-                    db.run('ROLLBACK');
-                    return res.status(500).json({ error: err.message });
-                  }
-                  res.status(201).json({ success: true, request_id });
-                });
-              }
+              );
             });
-          });
+          }));
+
+          Promise.all(insertPromises)
+            .then(() => {
+              db.run('COMMIT', (err) => {
+                if (err) {
+                  db.run('ROLLBACK');
+                  return res.status(500).json({ error: err.message });
+                }
+                res.status(201).json({ success: true, request_id });
+              });
+            })
+            .catch((err) => {
+              db.run('ROLLBACK');
+              res.status(400).json({ error: err.message });
+            });
         }
       );
     });
