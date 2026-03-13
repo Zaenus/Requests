@@ -14,24 +14,42 @@ router.post('/', (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
     if (!productRow) return res.status(400).json({ error: `Product ID ${product_id} not found in sector ID ${sector_id}` });
 
-    db.run(
-      `INSERT INTO requests (sector_id, turno, funcionario, responsavel, observacoes)
-       VALUES (?, ?, ?, ?, ?)`,
-      [sector_id, turno || null, funcionario || null, responsavel || null, observacoes || null],
-      function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        const request_id = this.lastID;
-        db.run(
-          `INSERT INTO request_items (request_id, product_id, quantity)
-           VALUES (?, ?, ?)`,
-          [request_id, product_id, quantity],
-          function (err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.status(201).json({ id: request_id, sector_id, product_id, quantity, status: 'pending' });
+    // Wrap both inserts in a transaction so an orphaned request record is
+    // never left behind if the request_items insert fails.
+    db.run('BEGIN TRANSACTION', (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      db.run(
+        `INSERT INTO requests (sector_id, turno, funcionario, responsavel, observacoes)
+         VALUES (?, ?, ?, ?, ?)`,
+        [sector_id, turno || null, funcionario || null, responsavel || null, observacoes || null],
+        function (err) {
+          if (err) {
+            db.run('ROLLBACK');
+            return res.status(500).json({ error: err.message });
           }
-        );
-      }
-    );
+          const request_id = this.lastID;
+          db.run(
+            `INSERT INTO request_items (request_id, product_id, quantity)
+             VALUES (?, ?, ?)`,
+            [request_id, product_id, quantity],
+            function (err) {
+              if (err) {
+                db.run('ROLLBACK');
+                return res.status(500).json({ error: err.message });
+              }
+              db.run('COMMIT', (err) => {
+                if (err) {
+                  db.run('ROLLBACK');
+                  return res.status(500).json({ error: err.message });
+                }
+                res.status(201).json({ id: request_id, sector_id, product_id, quantity, status: 'pending' });
+              });
+            }
+          );
+        }
+      );
+    });
   });
 });
 // POST /api/requests/enviar_requisicao (multi-product request)

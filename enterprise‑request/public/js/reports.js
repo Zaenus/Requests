@@ -33,7 +33,7 @@ function closeDetails() {
 
 /* ---------- LOAD SECTORS ---------- */
 async function loadSectors() {
-    const res = await fetch('/api/sectors');
+    const res = await fetch('/api/sectors', { credentials: 'include' });
     const sectors = await res.json();
     sectorSelect.innerHTML = '<option value="">Todos os setores</option>';
     sectors.forEach(s => {
@@ -56,7 +56,11 @@ async function loadReport() {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Carregando...</td></tr>';
 
     try {
-        const res = await fetch('/api/reports/approved-items?' + params);
+        const res = await fetch('/api/reports/approved-items?' + params, { credentials: 'include' });
+        if (res.status === 401 || res.status === 403) {
+            window.location.href = '/autorizacao';
+            return;
+        }
         if (!res.ok) throw new Error('Erro na API');
         const rows = await res.json();
         currentData = rows;
@@ -394,7 +398,11 @@ async function loadProductBySector() {
     emptyMsg.style.display = 'none';
 
     try {
-        const res = await fetch('/api/reports/product-by-sector?' + params);
+        const res = await fetch('/api/reports/product-by-sector?' + params, { credentials: 'include' });
+        if (res.status === 401 || res.status === 403) {
+            window.location.href = '/autorizacao';
+            return;
+        }
         if (!res.ok) throw new Error('Erro na API');
         const data = await res.json();
 

@@ -1,8 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { authenticateToken, requireRole } = require('../middleware/auth');
 
-// GET /api/sectors
+const adminOnly = [authenticateToken, requireRole('admin')];
+
+// GET /api/sectors — public (needed by the request submission form)
 router.get('/', (req, res) => {
   db.all('SELECT * FROM sectors ORDER BY name', [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -11,7 +14,7 @@ router.get('/', (req, res) => {
 });
 
 // POST /api/sectors   (Admin only)
-router.post('/', (req, res) => {
+router.post('/', adminOnly, (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Name required' });
 
@@ -26,7 +29,7 @@ router.post('/', (req, res) => {
 });
 
 // PUT /api/sectors/:id (Admin only)
-router.put('/:id', (req, res) => {
+router.put('/:id', adminOnly, (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Name required' });
@@ -43,7 +46,7 @@ router.put('/:id', (req, res) => {
 });
 
 // DELETE /api/sectors/:id (Admin only)
-router.delete('/:id', (req, res) => {
+router.delete('/:id', adminOnly, (req, res) => {
   const { id } = req.params;
 
   db.run(

@@ -164,6 +164,12 @@ enterprise-request/
 | PUT    | `/api/admin/products/:id` | Update a product |
 | DELETE | `/api/admin/products/:id` | Delete a product |
 
+### Public Product Catalog
+
+| Method | Path | Query params | Description |
+|--------|------|------|-------------|
+| GET    | `/api/catalog/products` | `sector_name` | Public product listing used by the request submission form (no authentication required) |
+
 ### Requests
 
 | Method | Path | Description |
@@ -192,6 +198,7 @@ enterprise-request/
 | Method | Path | Description |
 |--------|------|-------------|
 | GET    | `/api/health` | Returns `{ ok: true }` |
+| GET    | `/api/me` | Returns `{ id, username, role }` for the authenticated user |
 
 ---
 
@@ -205,32 +212,14 @@ The following issues were identified during a code review. They are listed by pr
 - **Race condition in multi-product request endpoint** (`requests.js`) — A manual counter detected completion of async `db.get` callbacks, but nested `db.run` INSERT calls could still be pending when `COMMIT` was issued, causing insert errors to be silently dropped. Replaced with `Promise.all()`.
 - **Missing `.gitignore`** — `node_modules/`, `data/enterprise.db`, and `.env` were not excluded from version control.
 - **No `.env.example`** — There was no template documenting required environment variables.
+- **Hardcoded JWT secret fallback** — The server now throws a fatal startup error (`process.exit(1)`) if `JWT_SECRET` is not set in the environment. The insecure `'your_jwt_secret_key'` default has been removed from both `server.js` and `authentication.js`.
+- **No authentication on most API routes** — `authenticateToken` middleware is now applied to `/api/admin` and `/api/reports`. Sector mutations (`POST`, `PUT`, `DELETE`) are also protected. GET `/api/sectors` and the new `/api/catalog/products` remain public for the request submission form. All relevant frontend pages send the auth cookie automatically (`credentials: 'include'`), and redirect to `/autorizacao` on `401`/`403`.
+- **No role-based access control (RBAC)** — A `requireRole('admin')` middleware (in `src/middleware/auth.js`) is now applied to every admin and report route. The `requireRole` helper also supports multiple allowed roles for future flexibility.
+- **JWT stored in `localStorage`** — The login endpoint now issues the JWT as an `HttpOnly; SameSite=Strict` cookie (`Secure` in production). JavaScript can no longer read the token, eliminating the XSS attack surface. `localStorage` usage has been removed from `autorizacao.js`.
+- **Missing database transaction for single-product requests** — The `POST /api/requests` endpoint now wraps both `INSERT` statements in a `BEGIN / COMMIT / ROLLBACK` block, matching the multi-product endpoint.
+- **Database not closed on shutdown** — `process.on('SIGTERM', …)` and `process.on('SIGINT', …)` handlers now call `db.close()` before exiting.
 
 ---
-
-### 🔴 Critical — Security
-
-1. **Hardcoded JWT secret fallback** (`server.js` line 10, `authentication.js` line 7)  
-   The default `'your_jwt_secret_key'` is used when `JWT_SECRET` is not set in the environment. Any application without a `.env` file is trivially exploitable.  
-   *Fix:* Throw a startup error if `JWT_SECRET` is not defined in the environment.
-
-2. **No authentication on most API routes**  
-   `authenticateToken` is defined in `server.js` but never applied to `/api/sectors`, `/api/admin`, or `/api/reports`. Any unauthenticated user can list, create, update, or delete products and change request statuses.  
-   *Fix:* Apply `authenticateToken` as middleware in `server.js` for all admin/report route groups; update frontend pages to send the `Authorization` header.
-
-3. **No role-based access control (RBAC)**  
-   The JWT payload includes a `role` field but it is never checked. Any authenticated user can perform admin operations.  
-   *Fix:* Add a role-checking middleware (e.g. `requireRole('admin')`) and apply it to mutation endpoints.
-
-4. **JWT stored in `localStorage`** (`autorizacao.js` line 18)  
-   Tokens in `localStorage` are accessible to any JavaScript on the page and are vulnerable to XSS attacks.  
-   *Fix:* Use `HttpOnly` cookies to store the JWT.
-
-### 🟠 High Priority — Correctness
-
-5. **Missing database transaction for single-product requests** (`requests.js` lines 17–35)  
-   The multi-product endpoint uses a transaction but the single-product path does not. If the `INSERT INTO request_items` fails, an orphaned request record is left in the database.  
-   *Fix:* Wrap both inserts in a `BEGIN / COMMIT / ROLLBACK` block.
 
 ### 🟡 Medium Priority — Code Quality
 
@@ -270,8 +259,4 @@ The following issues were identified during a code review. They are listed by pr
 
 15. **No API documentation**  
     No OpenAPI/Swagger spec is provided. Adding `swagger-jsdoc` and `swagger-ui-express` would generate interactive docs from JSDoc comments.
-
-16. **Database not closed on shutdown**  
-    `db.close()` is never called when the process exits.  
-    *Fix:* Add a `process.on('SIGTERM', ...)` / `process.on('SIGINT', ...)` handler to close the database cleanly.
 
