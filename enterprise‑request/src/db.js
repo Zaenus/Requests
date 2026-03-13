@@ -59,9 +59,19 @@ const initSchema = () => {
         sector_id INTEGER NOT NULL,
         name TEXT NOT NULL,
         unit TEXT NOT NULL,
+        quantity REAL DEFAULT 0,
+        inventory REAL DEFAULT 0,
+        cost_per_unit REAL DEFAULT 0,
+        supplier TEXT DEFAULT '',
         FOREIGN KEY(sector_id) REFERENCES sectors(id)
       )
     `);
+
+    // Migrate existing products table: add new columns if they don't exist
+    db.run(`ALTER TABLE products ADD COLUMN quantity REAL DEFAULT 0`, () => {});
+    db.run(`ALTER TABLE products ADD COLUMN inventory REAL DEFAULT 0`, () => {});
+    db.run(`ALTER TABLE products ADD COLUMN cost_per_unit REAL DEFAULT 0`, () => {});
+    db.run(`ALTER TABLE products ADD COLUMN supplier TEXT DEFAULT ''`, () => {});
 
     // Requests
     db.run(`

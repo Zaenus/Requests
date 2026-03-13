@@ -114,9 +114,13 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${p.id}</td>
         <td>${p.name}</td>
         <td>${p.unit}</td>
+        <td>${p.quantity ?? 0}</td>
+        <td>${p.inventory ?? 0}</td>
+        <td>${p.cost_per_unit > 0 ? parseFloat(p.cost_per_unit).toFixed(2) : '—'}</td>
+        <td>${p.supplier || '—'}</td>
         <td>
           <div class="action-buttons-cell">
-            <button class="btn-action btn-editar" onclick="window.editProduct(${p.id}, '${p.name}', '${p.unit}')">Edit</button>
+            <button class="btn-action btn-editar" onclick="window.editProduct(${p.id}, '${p.name}', '${p.unit}', ${p.quantity ?? 0}, ${p.inventory ?? 0}, ${p.cost_per_unit ?? 0}, '${(p.supplier || '').replace(/'/g, "\\'")}')">Edit</button>
             <button class="btn-action btn-excluir" onclick="window.confirmDelete('product', ${p.id})">Delete</button>
           </div>
         </td>
@@ -125,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     productsListContainer.innerHTML = `
       <table class="admin-list-table">
-        <thead><tr><th>ID</th><th>Name</th><th>Unit</th><th>Actions</th></tr></thead>
+        <thead><tr><th>ID</th><th>Name</th><th>Unit</th><th>Qty</th><th>Inventory</th><th>Cost/Unit</th><th>Supplier</th><th>Actions</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     `;
@@ -185,17 +189,25 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---------- Edit Product ----------
-  window.editProduct = (id, name, unit) => {
+  window.editProduct = (id, name, unit, quantity, inventory, cost_per_unit, supplier) => {
     currentProductId = id;
     editProductNameInput.value = name;
     editProductUnitInput.value = unit;
+    document.getElementById('edit-product-quantity').value = quantity ?? 0;
+    document.getElementById('edit-product-inventory').value = inventory ?? 0;
+    document.getElementById('edit-product-cost').value = cost_per_unit ?? 0;
+    document.getElementById('edit-product-supplier').value = supplier || '';
     editModal.style.display = 'block';
   };
 
   saveEditBtn.addEventListener('click', async () => {
     const data = {
       name: editProductNameInput.value.trim(),
-      unit: editProductUnitInput.value.trim()
+      unit: editProductUnitInput.value.trim(),
+      quantity: parseFloat(document.getElementById('edit-product-quantity').value) || 0,
+      inventory: parseFloat(document.getElementById('edit-product-inventory').value) || 0,
+      cost_per_unit: parseFloat(document.getElementById('edit-product-cost').value) || 0,
+      supplier: document.getElementById('edit-product-supplier').value.trim()
     };
     if (!data.name || !data.unit) {
       showSuccessModal('Product name and unit are required');

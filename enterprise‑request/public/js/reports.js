@@ -53,7 +53,7 @@ async function loadReport() {
     const productFilter = productInput.value.trim();
     if (productFilter)      params.append('product', productFilter);
 
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Loading...</td></tr>';
 
     try {
         const res = await fetch('/api/reports/approved-items?' + params, { credentials: 'include' });
@@ -67,7 +67,7 @@ async function loadReport() {
         updateProductSectorSelect();
 
         if (rows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No items found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No items found.</td></tr>';
             return;
         }
 
@@ -78,6 +78,9 @@ async function loadReport() {
                 <td>${new Date(r.created_at).toLocaleString('en-GB')}</td>
                 <td>${r.product}</td>
                 <td>${r.quantity}</td>
+                <td>${r.cost_per_unit > 0 ? r.cost_per_unit.toFixed(2) : '—'}</td>
+                <td>${r.total_cost > 0 ? r.total_cost.toFixed(2) : '—'}</td>
+                <td>${r.supplier || '—'}</td>
             </tr>
         `).join('');
 
@@ -86,7 +89,7 @@ async function loadReport() {
             renderMonthlySummary();
         }
     } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="5" style="color:red;">${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="color:red;">${e.message}</td></tr>`;
     }
 }
 
@@ -234,13 +237,16 @@ function exportToCSV() {
 
     // Raw data
     const rawCSV = [
-        ['Req. ID', 'Sector', 'Date/Time', 'Product', 'Quantity'],
+        ['Req. ID', 'Sector', 'Date/Time', 'Product', 'Quantity', 'Cost / Unit', 'Total Cost', 'Supplier'],
         ...currentData.map(r => [
             r.request_id,
             r.sector,
             new Date(r.created_at).toLocaleString('en-GB'),
             r.product,
-            r.quantity
+            r.quantity,
+            r.cost_per_unit > 0 ? r.cost_per_unit.toFixed(2) : '',
+            r.total_cost > 0 ? r.total_cost.toFixed(2) : '',
+            r.supplier || ''
         ])
     ].map(r => r.join(',')).join('\n');
 
@@ -293,10 +299,13 @@ function exportToPDF() {
     const rawData = currentData.map(r => [
         r.request_id, r.sector,
         new Date(r.created_at).toLocaleString('en-GB'),
-        r.product, r.quantity
+        r.product, r.quantity,
+        r.cost_per_unit > 0 ? r.cost_per_unit.toFixed(2) : '',
+        r.total_cost > 0 ? r.total_cost.toFixed(2) : '',
+        r.supplier || ''
     ]);
     doc.autoTable({
-        head: [['Req. ID', 'Sector', 'Date/Time', 'Product', 'Qty']],
+        head: [['Req. ID', 'Sector', 'Date/Time', 'Product', 'Qty', 'Cost/Unit', 'Total Cost', 'Supplier']],
         body: rawData,
         startY: y,
         theme: 'grid',
@@ -414,7 +423,7 @@ async function loadProductBySector() {
         chartContainer.style.display = 'block';
 
         document.getElementById('product-sector-body').innerHTML = data.map(d =>
-            `<tr><td>${d.sector}</td><td>${d.total}</td></tr>`
+            `<tr><td>${d.sector}</td><td>${d.total}</td><td>${d.total_cost > 0 ? d.total_cost.toFixed(2) : '—'}</td></tr>`
         ).join('');
 
         try {
