@@ -1,13 +1,108 @@
 const express = require('express');
 const router = express.Router();
+const { z } = require('zod');
 const db = require('../db');
+
+const singleRequestSchema = z.object({
+  sector_id: z.number({ coerce: true }).int().positive(),
+  product_id: z.number({ coerce: true }).int().positive(),
+  quantity: z.number({ coerce: true }).int().positive(),
+  shift: z.string().optional(),
+  employee: z.string().optional(),
+  supervisor: z.string().optional(),
+  notes: z.string().optional()
+});
+
+const multiRequestSchema = z.object({
+  sector: z.string().min(1, 'sector required'),
+  date: z.string().min(1, 'date required'),
+  time: z.string().min(1, 'time required'),
+  shift: z.string().optional(),
+  employee: z.string().optional(),
+  supervisor: z.string().optional(),
+  notes: z.string().optional(),
+  products: z.array(z.object({
+    id: z.number({ coerce: true }).int().positive(),
+    quantity: z.number({ coerce: true }).int().positive()
+  })).min(1, 'at least one product required')
+});
+
+/**
+ * @openapi
+ * /api/requests:
+ *   post:
+ *     summary: Submit a single-product request
+ *     tags: [Requests]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [sector_id, product_id, quantity]
+ *             properties:
+ *               sector_id:
+ *                 type: integer
+ *               product_id:
+ *                 type: integer
+ *               quantity:
+ *                 type: integer
+ *               shift:
+ *                 type: string
+ *               employee:
+ *                 type: string
+ *               supervisor:
+ *                 type: string
+ *               notes:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Request created
+ *       400:
+ *         description: Validation error
+ *
+ * /api/requests/submit:
+ *   post:
+ *     summary: Submit a multi-product request
+ *     tags: [Requests]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [sector, date, time, products]
+ *             properties:
+ *               sector:
+ *                 type: string
+ *               date:
+ *                 type: string
+ *               time:
+ *                 type: string
+ *               products:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: [id, quantity]
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     quantity:
+ *                       type: integer
+ *     responses:
+ *       201:
+ *         description: Request created
+ *       400:
+ *         description: Validation error
+ */
 
 // POST /api/requests (single product request)
 router.post('/', async (req, res) => {
-  const { sector_id, product_id, quantity, shift, employee, supervisor, notes } = req.body;
-  if (!sector_id || !product_id || !quantity) {
-    return res.status(400).json({ error: 'sector_id, product_id and quantity required' });
+  const parsed = singleRequestSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message });
   }
+  const { sector_id, product_id, quantity, shift, employee, supervisor, notes } = parsed.data;
 
   try {
     const productRow = await db.getAsync(
@@ -44,23 +139,11 @@ router.post('/', async (req, res) => {
 
 // POST /api/requests/submit (multi-product request)
 router.post('/submit', async (req, res) => {
-  const { sector, shift, date, time, employee, supervisor, products, notes } = req.body;
-
-  // Validate required fields
-  if (!sector || !products || products.length === 0) {
-    return res.status(400).json({ error: 'sector and products are required' });
+  const parsed = multiRequestSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message });
   }
-
-  if (!date || !time) {
-    return res.status(400).json({ error: 'date and time are required' });
-  }
-
-  // Validate that each product has required fields
-  for (const p of products) {
-    if (!p.id || !p.quantity) {
-      return res.status(400).json({ error: 'Each product must have id and quantity' });
-    }
-  }
+  const { sector, shift, date, time, employee, supervisor, products, notes } = parsed.data;
 
   const created_at = `${date} ${time}:00`;
 

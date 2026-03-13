@@ -2,6 +2,22 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
+/**
+ * @openapi
+ * /api/catalog/products:
+ *   get:
+ *     summary: Public product listing used by the request submission form
+ *     tags: [Catalog]
+ *     parameters:
+ *       - in: query
+ *         name: sector_name
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Array of products
+ */
+
 // GET /api/catalog/products?sector_name=...
 // Public endpoint used by the request submission form (no authentication required).
 router.get('/products', (req, res) => {

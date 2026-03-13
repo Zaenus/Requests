@@ -1,9 +1,22 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
 const { promisify } = require('util');
 
-const dbFile = path.resolve(__dirname, '../data/enterprise.db');
+// Use an in-memory database during testing to avoid file-system side-effects.
+// Otherwise, resolve the path and create the data directory if needed.
+let dbFile;
+if (process.env.NODE_ENV === 'test') {
+  dbFile = ':memory:';
+} else {
+  dbFile = path.resolve(__dirname, '../data/enterprise.db');
+  const dataDir = path.dirname(dbFile);
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+}
+
 const db = new sqlite3.Database(dbFile);
 
 // Promisified helpers so route handlers can use async/await instead of callbacks.
