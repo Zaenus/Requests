@@ -199,6 +199,7 @@ enterprise-request/
 |--------|------|-------------|
 | GET    | `/api/health` | Returns `{ ok: true }` |
 | GET    | `/api/me` | Returns `{ id, username, role }` for the authenticated user |
+| GET    | `/api/docs/` | Interactive OpenAPI documentation (Swagger UI) |
 
 ---
 
@@ -228,22 +229,20 @@ The following issues were identified during a code review. They are listed by pr
 
 ### 🟡 Medium Priority — Code Quality
 
-### 🟢 Low Priority — Developer Experience
+### ✅ Fixed — Developer Experience
 
-10. **No tests**  
-    The `test` script exits with an error code. There are no unit or integration tests.  
-    *Fix:* Add Jest with `supertest` for API route testing.
+10. **No tests** *(fixed)*  
+    Added Jest with `supertest` for API route testing. Run with `npm test`.
 
-11. **Minimal logging**  
-    Only the startup message is logged. Add `morgan` for HTTP request logging and a logger (e.g. `winston`) for application-level events.
+11. **Minimal logging** *(fixed)*  
+    Added `morgan` for HTTP request logging and `winston` for application-level logging. HTTP requests are logged via `morgan`; the startup and shutdown messages now use the `winston` logger. Logging is suppressed in test mode.
 
-12. **No input validation library**  
-    Field validation is done with ad-hoc `if` checks. Consider `zod` or `joi` for declarative schema validation.
+12. **No input validation library** *(fixed)*  
+    Replaced ad-hoc `if` checks with `zod` schema validation across all mutation endpoints (`authentication`, `requests`, `sectors`, `admin`). Invalid payloads return a descriptive 400 error.
 
-13. **No rate limiting**  
-    The login endpoint and all mutation endpoints are open to brute-force and flood attacks.  
-    *Fix:* Add `express-rate-limit`.
+13. **No rate limiting** *(fixed)*  
+    Added `express-rate-limit`. The login endpoint is limited to 10 attempts per 15 minutes per IP. All mutation endpoints share a 60-requests-per-minute limiter.
 
-14. **No API documentation**  
-    No OpenAPI/Swagger spec is provided. Adding `swagger-jsdoc` and `swagger-ui-express` would generate interactive docs from JSDoc comments.
+14. **No API documentation** *(fixed)*  
+    Added `swagger-jsdoc` and `swagger-ui-express`. JSDoc `@openapi` comments have been added to all route files. Interactive documentation is served at `/api/docs`.
 

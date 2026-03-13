@@ -2,6 +2,66 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
+/**
+ * @openapi
+ * /api/reports/approved-items:
+ *   get:
+ *     summary: Returns approved/printed request items
+ *     tags: [Reports]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: sector_id
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: start
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: end
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: product
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Array of approved/printed request items
+ *
+ * /api/reports/product-by-sector:
+ *   get:
+ *     summary: Returns total quantity per sector for a product
+ *     tags: [Reports]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: product
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: start
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: end
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: Array of sector totals
+ *       400:
+ *         description: product parameter required
+ */
+
 router.get('/approved-items', async (req, res) => {
   const { sector_id, start, end, product } = req.query;
 

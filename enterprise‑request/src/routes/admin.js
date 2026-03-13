@@ -1,6 +1,205 @@
 const express = require('express');
 const router = express.Router();
+const { z } = require('zod');
 const db = require('../db');
+
+const productSchema = z.object({
+  sector_id: z.number({ coerce: true }).int().positive(),
+  name: z.string().min(1, 'name required'),
+  unit: z.string().min(1, 'unit required')
+});
+
+const productUpdateSchema = z.object({
+  sector_id: z.number({ coerce: true }).int().positive().optional(),
+  name: z.string().min(1, 'name required'),
+  unit: z.string().min(1, 'unit required')
+});
+
+const requestStatusSchema = z.object({
+  status: z.enum(['pending', 'approved', 'done', 'printed'], { message: 'status must be one of: pending, approved, done, printed' })
+});
+
+const itemQuantitySchema = z.object({
+  quantity: z.number({ coerce: true }).int().nonnegative('quantity must be non-negative')
+});
+
+/**
+ * @openapi
+ * /api/admin/products:
+ *   get:
+ *     summary: List all products
+ *     tags: [Admin - Products]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Array of products
+ *   post:
+ *     summary: Create a product
+ *     tags: [Admin - Products]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [sector_id, name, unit]
+ *             properties:
+ *               sector_id:
+ *                 type: integer
+ *               name:
+ *                 type: string
+ *               unit:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Product created
+ *
+ * /api/admin/products-sector_id:
+ *   get:
+ *     summary: List products by sector
+ *     tags: [Admin - Products]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: sector_id
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Array of products
+ *
+ * /api/admin/products/{id}:
+ *   put:
+ *     summary: Update a product
+ *     tags: [Admin - Products]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Product updated
+ *   delete:
+ *     summary: Delete a product
+ *     tags: [Admin - Products]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Product deleted
+ *
+ * /api/admin/requests:
+ *   get:
+ *     summary: List requests (optionally filtered by status)
+ *     tags: [Admin - Requests]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Array of requests
+ *
+ * /api/admin/requests/{id}:
+ *   get:
+ *     summary: Get a specific request
+ *     tags: [Admin - Requests]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Request detail
+ *       404:
+ *         description: Not found
+ *   put:
+ *     summary: Update request status
+ *     tags: [Admin - Requests]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [pending, approved, done, printed]
+ *     responses:
+ *       200:
+ *         description: Status updated
+ *
+ * /api/admin/request_items/{request_id}/{product_id}:
+ *   put:
+ *     summary: Edit an item quantity
+ *     tags: [Admin - Requests]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: request_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: path
+ *         name: product_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Item updated
+ *   delete:
+ *     summary: Remove an item from a request
+ *     tags: [Admin - Requests]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: request_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: path
+ *         name: product_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Item removed
+ */
 
 // Helper to parse the JSON products array returned by json_group_array,
 // filtering out the null sentinel row produced by a LEFT JOIN with no items.
@@ -41,10 +240,11 @@ router.get('/products-sector_id', async (req, res) => {
 });
 
 router.post('/products', async (req, res) => {
-  const { sector_id, name, unit } = req.body;
-  if (!sector_id || !name || !unit) {
-    return res.status(400).json({ error: 'sector_id, name and unit required' });
+  const parsed = productSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message });
   }
+  const { sector_id, name, unit } = parsed.data;
 
   try {
     const { lastID } = await db.runAsync(
@@ -59,10 +259,11 @@ router.post('/products', async (req, res) => {
 
 router.put('/products/:id', async (req, res) => {
   const { id } = req.params;
-  const { sector_id, name, unit } = req.body;
-  if (!name || !unit) {
-    return res.status(400).json({ error: 'name and unit required' });
+  const parsed = productUpdateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message });
   }
+  const { sector_id, name, unit } = parsed.data;
 
   try {
     const { changes } = await db.runAsync(
@@ -152,8 +353,11 @@ router.get('/requests/:id', async (req, res) => {
 
 router.put('/requests/:id', async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
-  if (!status) return res.status(400).json({ error: 'status required' });
+  const parsed = requestStatusSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message });
+  }
+  const { status } = parsed.data;
 
   try {
     const { changes } = await db.runAsync(
@@ -170,10 +374,11 @@ router.put('/requests/:id', async (req, res) => {
 // Request Items CRUD
 router.put('/request_items/:request_id/:product_id', async (req, res) => {
   const { request_id, product_id } = req.params;
-  const { quantity } = req.body;
-  if (!quantity || quantity < 0) {
-    return res.status(400).json({ error: 'quantity required and must be non-negative' });
+  const parsed = itemQuantitySchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message });
   }
+  const { quantity } = parsed.data;
 
   try {
     const { changes } = await db.runAsync(
