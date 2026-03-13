@@ -218,7 +218,7 @@ The following issues were identified during a code review. They are listed by pr
 - **JWT stored in `localStorage`** — The login endpoint now issues the JWT as an `HttpOnly; SameSite=Strict` cookie (`Secure` in production). JavaScript can no longer read the token, eliminating the XSS attack surface. `localStorage` usage has been removed from `authorization.js`.
 - **Missing database transaction for single-product requests** — The `POST /api/requests` endpoint now wraps both `INSERT` statements in a `BEGIN / COMMIT / ROLLBACK` block, matching the multi-product endpoint.
 - **Database not closed on shutdown** — `process.on('SIGTERM', …)` and `process.on('SIGINT', …)` handlers now call `db.close()` before exiting.
-- **Duplicated `fetchJSON` helper** — Extracted to `public/js/api.js` and loaded as a shared `<script>` tag. The three admin pages (`admin.html`, `deposit.html`, `products.html`) now use the shared helper. `autorizacao.html` also loads `api.js` but retains a local override that suppresses the 401/403 redirect so the login modal can be shown instead.
+- **Duplicated `fetchJSON` helper** — Extracted to `public/js/api.js` and loaded as a shared `<script>` tag. The three admin pages (`admin.html`, `deposit.html`, `products.html`) now use the shared helper. `authorization.html` also loads `api.js` but retains a local override that suppresses the 401/403 redirect so the login modal can be shown instead.
 - **Callback-based async pattern** — All database calls in `src/routes/` now use `async/await` via `db.allAsync`, `db.getAsync`, and `db.runAsync` helpers added to `src/db.js`. The deeply-nested callback ("pyramid of doom") pattern has been eliminated.
 - **GROUP_CONCAT product formatting** — SQL queries in `src/routes/admin.js` now return products as a JSON array of objects (`json_group_array(json_object(...))`) instead of a comma-concatenated string. A comma in a product name no longer breaks parsing. Both the `authorization.js` and `deposit.js` frontend files have been updated to consume the new structure.
 - **Inconsistent error response format** — The shared `fetchJSON` helper in `public/js/api.js` (and the local override in `authorization.js`) now parses error responses as JSON and extracts the `error` field, so users always see a clean human-readable message. All backend routes already return `{ error: 'message' }` consistently.
@@ -244,8 +244,6 @@ The following issues were identified during a code review. They are listed by pr
     The login endpoint and all mutation endpoints are open to brute-force and flood attacks.  
     *Fix:* Add `express-rate-limit`.
 
-
-
-15. **No API documentation**  
+14. **No API documentation**  
     No OpenAPI/Swagger spec is provided. Adding `swagger-jsdoc` and `swagger-ui-express` would generate interactive docs from JSDoc comments.
 
