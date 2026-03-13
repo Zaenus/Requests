@@ -22,7 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ────── HELPERS ──────
     const fetchJSON = async (url, opts = {}) => {
+        opts.credentials = 'include';
         const res = await fetch(url, opts);
+        if (res.status === 401 || res.status === 403) {
+            window.location.href = '/autorizacao';
+            throw new Error('Não autenticado');
+        }
         if (!res.ok) {
             const text = await res.text();
             throw new Error(text || res.statusText);

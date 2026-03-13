@@ -4,7 +4,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- Helper ----------
   async function fetchJSON(url, opts = {}) {
+    opts.credentials = 'include';
     const res = await fetch(url, opts);
+    if (res.status === 401 || res.status === 403) {
+      window.location.href = '/autorizacao';
+      throw new Error('Não autenticado');
+    }
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   }

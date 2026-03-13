@@ -87,16 +87,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // ────── FETCH PRODUTOS ──────
     async function fetchProdutos(setor) {
         try {
-            const response = await fetch(`/api/admin/products`);
-            const allProducts = await response.json();
-            const filtered = allProducts.filter(p => p.sector_name === setor);
+            const response = await fetch(`/api/catalog/products?sector_name=${encodeURIComponent(setor)}`);
+            const products = await response.json();
             productData = {
-                "Geral": filtered.map(p => {
+                "Geral": products.map(p => {
                     if (!p.id || !p.name || !p.unit) return null;
                     return { id: p.id, nome: p.name, und: p.unit };
                 }).filter(p => p !== null)
             };
-            if (filtered.length === 0) {
+            if (products.length === 0) {
                 showModal('Nenhum produto encontrado para o setor selecionado.', 'erro');
             }
             populateCategories(productData);

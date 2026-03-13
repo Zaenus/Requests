@@ -14,17 +14,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const usernameDisplay = document.getElementById('username-display');
 
     let currentRequisitionId = null;
-    let token = localStorage.getItem('token');
     let pollingInterval = null;
     let isEditMode = false;
     let requestData = null;
 
-    // Helper function for API calls
+    // Helper function for API calls.
+    // Credentials are included so the HttpOnly auth cookie is sent automatically.
     async function fetchJSON(url, opts = {}) {
+        opts.credentials = 'include';
         opts.headers = {
-            ...opts.headers,
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            ...opts.headers
         };
         const res = await fetch(url, opts);
         if (!res.ok) throw new Error(await res.text());
@@ -64,20 +64,15 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // Check authentication status
+    // Check authentication status by calling a protected endpoint.
+    // If the HttpOnly cookie is present and valid, the request will succeed.
     async function checkAuth() {
-        if (!token) {
-            loginModal.style.display = 'flex';
-            stopPolling();
-            return false;
-        }
         try {
-            await fetchJSON(`${API_URL}/health`);
+            const user = await fetchJSON(`${API_URL}/me`);
+            if (usernameDisplay) usernameDisplay.textContent = user.username;
             startPolling();
             return true;
         } catch (error) {
-            localStorage.removeItem('token');
-            token = null;
             loginModal.style.display = 'flex';
             stopPolling();
             return false;
@@ -105,14 +100,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`${API_URL}/authentication/login`, {
                 method: 'POST',
+                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.error);
-            token = data.token;
-            localStorage.setItem('token', token);
-            usernameDisplay.textContent = username;
+            // The server sets an HttpOnly cookie — no token stored in JS.
+            if (usernameDisplay) usernameDisplay.textContent = data.username;
             closeLoginModal();
             loadPendingRequests();
             startPolling();
@@ -290,14 +285,9 @@ document.addEventListener('DOMContentLoaded', () => {
         stopPolling();
     };
 
-    // Handle approve/reject with login check
+    // Handle approve/reject
     async function handleAction(status) {
         if (!currentRequisitionId) return;
-        if (!token) {
-            currentAction = status;
-            loginModal.style.display = 'flex';
-            return;
-        }
         try {
             await fetchJSON(`${API_URL}/admin/requests/${currentRequisitionId}`, {
                 method: 'PUT',
