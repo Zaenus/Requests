@@ -443,6 +443,11 @@ async function loadProductBySector() {
         } catch (_) {
             // Chart library unavailable; data table is still displayed
         }
+} catch (e) {        
+        chartContainer.style.display = 'none';
+        emptyMsg.style.display = 'block';
+        emptyMsg.textContent = e.message;
+    }
 }
 
 /* ---------- INIT ---------- */
