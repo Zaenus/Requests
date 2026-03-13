@@ -20,6 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Helper function for API calls.
     // Credentials are included so the HttpOnly auth cookie is sent automatically.
+    // Error responses are expected to be JSON { error: 'message' }; the error
+    // message is extracted and thrown so callers receive a clean string.
+    // Note: unlike the shared fetchJSON in api.js, this version does NOT redirect
+    // on 401/403 — authentication is handled locally via the login modal.
     async function fetchJSON(url, opts = {}) {
         opts.credentials = 'include';
         opts.headers = {
@@ -27,7 +31,16 @@ document.addEventListener('DOMContentLoaded', () => {
             ...opts.headers
         };
         const res = await fetch(url, opts);
-        if (!res.ok) throw new Error(await res.text());
+        if (!res.ok) {
+            let msg;
+            try {
+                const body = await res.json();
+                msg = body.error || res.statusText;
+            } catch {
+                msg = res.statusText;
+            }
+            throw new Error(msg);
+        }
         return res.json();
     }
 
@@ -171,9 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
         requestData = request;
         const produtosHtml = request.products.length > 0
             ? request.products.map((p, index) => {
-                const [name, qtyUnit] = p.split(' (');
-                const [quantity, unit] = qtyUnit.slice(0, -1).split(' ');
-                const productId = request.product_ids ? request.product_ids[index] : null;
+                const { id: productId, name, quantity, unit } = p;
                 return `
                     <li data-product-id="${productId || ''}">
                         ${isEditMode ? `

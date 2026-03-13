@@ -1,9 +1,23 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcrypt');
+const { promisify } = require('util');
 
 const dbFile = path.resolve(__dirname, '../data/enterprise.db');
 const db = new sqlite3.Database(dbFile);
+
+// Promisified helpers so route handlers can use async/await instead of callbacks.
+db.allAsync = promisify(db.all.bind(db));
+db.getAsync = promisify(db.get.bind(db));
+// db.run exposes lastID / changes via `this`, so util.promisify cannot be used directly.
+db.runAsync = function runAsync(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function (err) {
+      if (err) reject(err);
+      else resolve({ lastID: this.lastID, changes: this.changes });
+    });
+  });
+};
 
 const initSchema = () => {
   db.serialize(() => {

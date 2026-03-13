@@ -218,25 +218,14 @@ The following issues were identified during a code review. They are listed by pr
 - **JWT stored in `localStorage`** — The login endpoint now issues the JWT as an `HttpOnly; SameSite=Strict` cookie (`Secure` in production). JavaScript can no longer read the token, eliminating the XSS attack surface. `localStorage` usage has been removed from `autorizacao.js`.
 - **Missing database transaction for single-product requests** — The `POST /api/requests` endpoint now wraps both `INSERT` statements in a `BEGIN / COMMIT / ROLLBACK` block, matching the multi-product endpoint.
 - **Database not closed on shutdown** — `process.on('SIGTERM', …)` and `process.on('SIGINT', …)` handlers now call `db.close()` before exiting.
+- **Duplicated `fetchJSON` helper** — Extracted to `public/js/api.js` and loaded as a shared `<script>` tag. The three admin pages (`admin.html`, `deposit.html`, `products.html`) now use the shared helper. `autorizacao.html` also loads `api.js` but retains a local override that suppresses the 401/403 redirect so the login modal can be shown instead.
+- **Callback-based async pattern** — All database calls in `src/routes/` now use `async/await` via `db.allAsync`, `db.getAsync`, and `db.runAsync` helpers added to `src/db.js`. The deeply-nested callback ("pyramid of doom") pattern has been eliminated.
+- **GROUP_CONCAT product formatting** — SQL queries in `src/routes/admin.js` now return products as a JSON array of objects (`json_group_array(json_object(...))`) instead of a comma-concatenated string. A comma in a product name no longer breaks parsing. Both the `autorizacao.js` and `deposit.js` frontend files have been updated to consume the new structure.
+- **Inconsistent error response format** — The shared `fetchJSON` helper in `public/js/api.js` (and the local override in `autorizacao.js`) now parses error responses as JSON and extracts the `error` field, so users always see a clean human-readable message. All backend routes already return `{ error: 'message' }` consistently.
 
 ---
 
 ### 🟡 Medium Priority — Code Quality
-
-6. **Duplicated `fetchJSON` helper**  
-   Identical `fetchJSON` functions are copy-pasted into `admin.js`, `deposit.js`, `products.js`, and `autorizacao.js`. Any behaviour change must be made in four places.  
-   *Fix:* Extract to `public/js/api.js` and load it as a shared script tag or ES module.
-
-7. **Callback-based async pattern**  
-   Most database calls use deeply nested callbacks ("pyramid of doom"), making error handling fragile. Node.js `util.promisify` or the `better-sqlite3` package would allow `async/await` throughout.
-
-8. **GROUP_CONCAT product formatting**  
-   Product names and quantities are concatenated as a single string in SQL (`p.name || ' (' || ri.quantity || ' ' || p.unit || ')'`) and then split by commas on the frontend. A comma in a product name would break parsing.  
-   *Fix:* Return a JSON array of objects from the query instead.
-
-9. **Inconsistent error response format**  
-   Some endpoints return `{ error: 'message' }`, others forward raw SQLite error text. Frontend code assumes JSON but sometimes receives plain text.  
-   *Fix:* Standardise on `{ error: 'message' }` for all error responses.
 
 ### 🟢 Low Priority — Developer Experience
 

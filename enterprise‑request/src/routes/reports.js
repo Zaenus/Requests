@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-router.get('/approved-items', (req, res) => {
+router.get('/approved-items', async (req, res) => {
   const { sector_id, start, end, product } = req.query;
 
   // Build WHERE clauses safely
@@ -44,13 +44,15 @@ router.get('/approved-items', (req, res) => {
     ORDER BY r.created_at DESC, r.id
   `;
 
-  db.all(sql, params, (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const rows = await db.allAsync(sql, params);
     res.json(rows);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.get('/product-by-sector', (req, res) => {
+router.get('/product-by-sector', async (req, res) => {
   const { product, start, end } = req.query;
 
   if (!product) return res.status(400).json({ error: 'product parameter required' });
@@ -80,10 +82,12 @@ router.get('/product-by-sector', (req, res) => {
     ORDER BY total DESC
   `;
 
-  db.all(sql, params, (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const rows = await db.allAsync(sql, params);
     res.json(rows);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;

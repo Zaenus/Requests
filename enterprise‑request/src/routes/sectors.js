@@ -6,58 +6,54 @@ const { authenticateToken, requireRole } = require('../middleware/auth');
 const adminOnly = [authenticateToken, requireRole('admin')];
 
 // GET /api/sectors — public (needed by the request submission form)
-router.get('/', (req, res) => {
-  db.all('SELECT * FROM sectors ORDER BY name', [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
+router.get('/', async (req, res) => {
+  try {
+    const rows = await db.allAsync('SELECT * FROM sectors ORDER BY name', []);
     res.json(rows);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // POST /api/sectors   (Admin only)
-router.post('/', adminOnly, (req, res) => {
+router.post('/', adminOnly, async (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Name required' });
 
-  db.run(
-    'INSERT INTO sectors (name) VALUES (?)',
-    [name],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.status(201).json({ id: this.lastID, name });
-    }
-  );
+  try {
+    const { lastID } = await db.runAsync('INSERT INTO sectors (name) VALUES (?)', [name]);
+    res.status(201).json({ id: lastID, name });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // PUT /api/sectors/:id (Admin only)
-router.put('/:id', adminOnly, (req, res) => {
+router.put('/:id', adminOnly, async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Name required' });
 
-  db.run(
-    'UPDATE sectors SET name = ? WHERE id = ?',
-    [name, id],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-      if (this.changes === 0) return res.status(404).json({ error: 'Sector not found' });
-      res.json({ success: true, id, name });
-    }
-  );
+  try {
+    const { changes } = await db.runAsync('UPDATE sectors SET name = ? WHERE id = ?', [name, id]);
+    if (changes === 0) return res.status(404).json({ error: 'Sector not found' });
+    res.json({ success: true, id, name });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // DELETE /api/sectors/:id (Admin only)
-router.delete('/:id', adminOnly, (req, res) => {
+router.delete('/:id', adminOnly, async (req, res) => {
   const { id } = req.params;
 
-  db.run(
-    'DELETE FROM sectors WHERE id = ?',
-    [id],
-    function (err) {
-      if (err) return res.status(500).json({ error: err.message });
-      if (this.changes === 0) return res.status(404).json({ error: 'Sector not found' });
-      res.status(200).json({ message: 'Sector deleted successfully' });
-    }
-  );
+  try {
+    const { changes } = await db.runAsync('DELETE FROM sectors WHERE id = ?', [id]);
+    if (changes === 0) return res.status(404).json({ error: 'Sector not found' });
+    res.status(200).json({ message: 'Sector deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
