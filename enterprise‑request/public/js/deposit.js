@@ -21,20 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let pollingInterval = null;
 
     // ────── HELPERS ──────
-    const fetchJSON = async (url, opts = {}) => {
-        opts.credentials = 'include';
-        const res = await fetch(url, opts);
-        if (res.status === 401 || res.status === 403) {
-            window.location.href = '/autorizacao';
-            throw new Error('Não autenticado');
-        }
-        if (!res.ok) {
-            const text = await res.text();
-            throw new Error(text || res.statusText);
-        }
-        return res.json();
-    };
-
     const formatLocalDate = (utcIso) => {
         const d = new Date(utcIso);                 // JS treats the string as UTC
         return d.toLocaleString('pt-BR', {
@@ -114,7 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <td>${r.id}</td>
             <td>${r.sector_name}</td>
             <td>${formatLocalDate(r.created_at)}</td>
-            <td>${r.products || 'Sem itens'}</td>
+            <td>${r.products && r.products.length > 0
+                ? r.products.map(p => `${p.name} (${p.quantity} ${p.unit})`).join(', ')
+                : 'Sem itens'}</td>
             <td class="actions-cell">
                 <button class="btn-action btn-visualizar" data-id="${r.id}" data-action="view">Visualizar</button>
                 <button class="btn-action btn-imprimir"   data-id="${r.id}" data-action="print">Imprimir</button>
@@ -155,11 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderModalContent = (request) => {
         requestData = request;
         const productRows = request.products?.length
-            ? request.products.map((p, i) => {
-                const match = p.match(/^(.+) \(([0-9]+) (.+)\)$/);
-                if (!match) return `<li>${p}</li>`;
-                const [, name, qty, unit] = match;
-                const productId = request.product_ids[i];
+            ? request.products.map((p) => {
+                const { id: productId, name, quantity: qty, unit } = p;
                 return `
                     <li data-product-id="${productId}">
                         ${isEditMode
@@ -317,10 +302,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const request = await fetchJSON(`${API_URL}/requests/${id}`);
             const win = window.open('', '_blank');
-            const rows = request.products.map(p => {
-                const m = p.match(/^(.+) \(([0-9]+) (.+)\)$/);
-                return m ? `<tr><td>${m[1]}</td><td>${m[2]}</td><td>${m[3]}</td></tr>` : `<tr><td colspan="3">${p}</td></tr>`;
-            }).join('');
+            const rows = request.products.map(p =>
+                `<tr><td>${p.name}</td><td>${p.quantity}</td><td>${p.unit}</td></tr>`
+            ).join('');
 
             win.document.write(`
                 <html><head><title>Requisição #${id}</title>
