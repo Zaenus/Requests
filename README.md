@@ -125,7 +125,7 @@ enterprise-request/
 ├── public/
 │   ├── index.html          # Request submission form
 │   ├── admin.html          # Sector/product administration
-│   ├── autorizacao.html    # Approval workflow (requires login)
+│   ├── authorization.html  # Approval workflow (requires login)
 │   ├── deposit.html        # Fulfilment / inventory view
 │   ├── products.html       # Product catalogue
 │   ├── reports.html        # Charts & analytics
@@ -213,15 +213,16 @@ The following issues were identified during a code review. They are listed by pr
 - **Missing `.gitignore`** — `node_modules/`, `data/enterprise.db`, and `.env` were not excluded from version control.
 - **No `.env.example`** — There was no template documenting required environment variables.
 - **Hardcoded JWT secret fallback** — The server now throws a fatal startup error (`process.exit(1)`) if `JWT_SECRET` is not set in the environment. The insecure `'your_jwt_secret_key'` default has been removed from both `server.js` and `authentication.js`.
-- **No authentication on most API routes** — `authenticateToken` middleware is now applied to `/api/admin` and `/api/reports`. Sector mutations (`POST`, `PUT`, `DELETE`) are also protected. GET `/api/sectors` and the new `/api/catalog/products` remain public for the request submission form. All relevant frontend pages send the auth cookie automatically (`credentials: 'include'`), and redirect to `/autorizacao` on `401`/`403`.
+- **No authentication on most API routes** — `authenticateToken` middleware is now applied to `/api/admin` and `/api/reports`. Sector mutations (`POST`, `PUT`, `DELETE`) are also protected. GET `/api/sectors` and the new `/api/catalog/products` remain public for the request submission form. All relevant frontend pages send the auth cookie automatically (`credentials: 'include'`), and redirect to `/authorization` on `401`/`403`.
 - **No role-based access control (RBAC)** — A `requireRole('admin')` middleware (in `src/middleware/auth.js`) is now applied to every admin and report route. The `requireRole` helper also supports multiple allowed roles for future flexibility.
-- **JWT stored in `localStorage`** — The login endpoint now issues the JWT as an `HttpOnly; SameSite=Strict` cookie (`Secure` in production). JavaScript can no longer read the token, eliminating the XSS attack surface. `localStorage` usage has been removed from `autorizacao.js`.
+- **JWT stored in `localStorage`** — The login endpoint now issues the JWT as an `HttpOnly; SameSite=Strict` cookie (`Secure` in production). JavaScript can no longer read the token, eliminating the XSS attack surface. `localStorage` usage has been removed from `authorization.js`.
 - **Missing database transaction for single-product requests** — The `POST /api/requests` endpoint now wraps both `INSERT` statements in a `BEGIN / COMMIT / ROLLBACK` block, matching the multi-product endpoint.
 - **Database not closed on shutdown** — `process.on('SIGTERM', …)` and `process.on('SIGINT', …)` handlers now call `db.close()` before exiting.
-- **Duplicated `fetchJSON` helper** — Extracted to `public/js/api.js` and loaded as a shared `<script>` tag. The three admin pages (`admin.html`, `deposit.html`, `products.html`) now use the shared helper. `autorizacao.html` also loads `api.js` but retains a local override that suppresses the 401/403 redirect so the login modal can be shown instead.
+- **Duplicated `fetchJSON` helper** — Extracted to `public/js/api.js` and loaded as a shared `<script>` tag. The three admin pages (`admin.html`, `deposit.html`, `products.html`) now use the shared helper. `authorization.html` also loads `api.js` but retains a local override that suppresses the 401/403 redirect so the login modal can be shown instead.
 - **Callback-based async pattern** — All database calls in `src/routes/` now use `async/await` via `db.allAsync`, `db.getAsync`, and `db.runAsync` helpers added to `src/db.js`. The deeply-nested callback ("pyramid of doom") pattern has been eliminated.
-- **GROUP_CONCAT product formatting** — SQL queries in `src/routes/admin.js` now return products as a JSON array of objects (`json_group_array(json_object(...))`) instead of a comma-concatenated string. A comma in a product name no longer breaks parsing. Both the `autorizacao.js` and `deposit.js` frontend files have been updated to consume the new structure.
-- **Inconsistent error response format** — The shared `fetchJSON` helper in `public/js/api.js` (and the local override in `autorizacao.js`) now parses error responses as JSON and extracts the `error` field, so users always see a clean human-readable message. All backend routes already return `{ error: 'message' }` consistently.
+- **GROUP_CONCAT product formatting** — SQL queries in `src/routes/admin.js` now return products as a JSON array of objects (`json_group_array(json_object(...))`) instead of a comma-concatenated string. A comma in a product name no longer breaks parsing. Both the `authorization.js` and `deposit.js` frontend files have been updated to consume the new structure.
+- **Inconsistent error response format** — The shared `fetchJSON` helper in `public/js/api.js` (and the local override in `authorization.js`) now parses error responses as JSON and extracts the `error` field, so users always see a clean human-readable message. All backend routes already return `{ error: 'message' }` consistently.
+- **Mixed language naming** — All Portuguese identifiers, file names, URL paths, API endpoints, UI strings, error messages, and code comments have been standardised to English. Files renamed: `autorizacao.html` → `authorization.html`, `css/autorizacao.css` → `css/authorization.css`, `css/deposito.css` → `css/deposit.css`, `css/produtos.css` → `css/products.css`, `js/autorizacao.js` → `js/authorization.js`. URL routes updated: `/deposito` → `/deposit`, `/autorizacao` → `/authorization`, `/setores` → `/sectors`, `/relatorios` → `/reports`. API endpoint `POST /api/requests/enviar_requisicao` renamed to `POST /api/requests/submit`. Database columns renamed: `turno` → `shift`, `funcionario` → `employee`, `responsavel` → `supervisor`, `observacoes` → `notes`.
 
 ---
 
@@ -243,9 +244,6 @@ The following issues were identified during a code review. They are listed by pr
     The login endpoint and all mutation endpoints are open to brute-force and flood attacks.  
     *Fix:* Add `express-rate-limit`.
 
-14. **Mixed language naming**  
-    File and variable names mix Portuguese (`autorizacao`, `requisicao`, `setor`) and English. Standardising on one language improves maintainability for international contributors.
-
-15. **No API documentation**  
+14. **No API documentation**  
     No OpenAPI/Swagger spec is provided. Adding `swagger-jsdoc` and `swagger-ui-express` would generate interactive docs from JSDoc comments.
 

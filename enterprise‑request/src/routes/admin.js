@@ -95,7 +95,7 @@ router.get('/requests', async (req, res) => {
   const { status } = req.query;
   const sql = `
     SELECT r.id, r.sector_id, s.name as sector_name, r.created_at, r.status,
-           r.turno, r.funcionario, r.responsavel, r.observacoes,
+           r.shift, r.employee, r.supervisor, r.notes,
            json_group_array(
              json_object('id', ri.product_id, 'name', p.name, 'quantity', ri.quantity, 'unit', p.unit)
            ) as products
@@ -139,10 +139,10 @@ router.get('/requests/:id', async (req, res) => {
       sector_name: request.sector_name,
       created_at: request.created_at,
       status: request.status,
-      turno: request.turno,
-      funcionario: request.funcionario,
-      responsavel: request.responsavel,
-      observacoes: request.observacoes,
+      shift: request.shift,
+      employee: request.employee,
+      supervisor: request.supervisor,
+      notes: request.notes,
       products: parseProducts(request.products)
     });
   } catch (err) {

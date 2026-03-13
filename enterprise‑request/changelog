@@ -34,3 +34,21 @@ display the list correctly when we have many products in the sector;
 #Future updates:
 
 
+
+#2026-03-13:
+
+  --> Standardised all language to English across the entire codebase:
+      - Renamed files: autorizacao.html -> authorization.html,
+        css/autorizacao.css -> css/authorization.css,
+        css/deposito.css -> css/deposit.css,
+        css/produtos.css -> css/products.css,
+        js/autorizacao.js -> js/authorization.js;
+      - Updated server URL routes: /deposito -> /deposit,
+        /autorizacao -> /authorization, /setores -> /sectors,
+        /relatorios -> /reports;
+      - Renamed API endpoint POST /api/requests/enviar_requisicao
+        to POST /api/requests/submit;
+      - Renamed database columns: turno -> shift, funcionario -> employee,
+        responsavel -> supervisor, observacoes -> notes;
+      - Translated all Portuguese UI text, error messages, and code
+        comments to English;

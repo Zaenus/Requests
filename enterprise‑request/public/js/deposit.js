@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalEnd = document.getElementById('request-modal-end');
     const editItemsBtn = document.createElement('button');
     editItemsBtn.className = 'btn btn-primary';
-    editItemsBtn.textContent = 'Editar';
+    editItemsBtn.textContent = 'Edit';
     editItemsBtn.style.marginTop = '15px';
     editItemsBtn.style.width = '80px';
     editItemsBtn.style.display = 'none';
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ────── HELPERS ──────
     const formatLocalDate = (utcIso) => {
         const d = new Date(utcIso);                 // JS treats the string as UTC
-        return d.toLocaleString('pt-BR', {
+        return d.toLocaleString('en-GB', {
             day:   '2-digit',
             month: '2-digit',
             year:  'numeric',
@@ -58,15 +58,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const okBtn = document.getElementById('modal-ok-btn');
         const cancelBtn = document.getElementById('modal-cancel-btn');
 
-        okBtn.textContent = 'Sim';
-        cancelBtn.textContent = 'Não';
+        okBtn.textContent = 'Yes';
+        cancelBtn.textContent = 'No';
         okBtn.style.display = 'inline-block';
         cancelBtn.style.display = 'inline-block';
 
         const cleanup = () => {
             modal.style.display = 'none';
             okBtn.textContent = 'OK';
-            cancelBtn.textContent = 'Cancelar';
+            cancelBtn.textContent = 'Cancel';
             okBtn.style.display = 'inline-block';
             cancelBtn.style.display = 'none';
             document.getElementById('modal-close').onclick = () => modal.style.display = 'none';
@@ -102,10 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <td>${formatLocalDate(r.created_at)}</td>
             <td>${r.products && r.products.length > 0
                 ? r.products.map(p => `${p.name} (${p.quantity} ${p.unit})`).join(', ')
-                : 'Sem itens'}</td>
+                : 'No items'}</td>
             <td class="actions-cell">
-                <button class="btn-action btn-visualizar" data-id="${r.id}" data-action="view">Visualizar</button>
-                <button class="btn-action btn-imprimir"   data-id="${r.id}" data-action="print">Imprimir</button>
+                <button class="btn-action btn-visualizar" data-id="${r.id}" data-action="view">View</button>
+                <button class="btn-action btn-imprimir"   data-id="${r.id}" data-action="print">Print</button>
             </td>
         </tr>`;
 
@@ -116,11 +116,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         activeTbody.innerHTML = active.length
             ? active.map(renderRow).join('')
-            : '<tr><td colspan="5">Nenhuma requisição ativa.</td></tr>';
+            : '<tr><td colspan="5">No active requests.</td></tr>';
 
         historicTbody.innerHTML = historic.length
             ? historic.map(renderRow).join('')
-            : '<tr><td colspan="5">Nenhum histórico.</td></tr>';
+            : '<tr><td colspan="5">No history.</td></tr>';
     };
 
     // ────── LOAD REQUESTS ──────
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const requests = await fetchJSON(`${API_URL}/requests`);
             renderTables(requests);
         } catch (e) {
-            showModal('Erro', 'Erro ao carregar requisições: ' + e.message, true);
+            showModal('Error', 'Error loading requests: ' + e.message, true);
         }
     };
 
@@ -150,38 +150,38 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${isEditMode
                             ? `<input type="number" class="quantity-input" value="${qty}" min="0" data-product-id="${productId}">
                                <span>${name} (${unit})</span>
-                               <button class="btn-delete" data-product-id="${productId}">Excluir</button>`
+                               <button class="btn-delete" data-product-id="${productId}">Delete</button>`
                             : `<strong>${name}:</strong> ${qty} ${unit}`
                         }
                     </li>`;
             }).join('')
-            : '<li>Nenhum produto</li>';
+            : '<li>No products</li>';
 
         detailsContainer.innerHTML = `
             <p><strong>ID:</strong> ${request.id}</p>
-            <p><strong>Setor:</strong> ${request.sector_name}</p>
-            <p><strong>Data/Hora:</strong> ${formatLocalDate(request.created_at)}</p>
+            <p><strong>Sector:</strong> ${request.sector_name}</p>
+            <p><strong>Date/Time:</strong> ${formatLocalDate(request.created_at)}</p>
             <p><strong>Status:</strong> <span class="status ${request.status}">${request.status}</span></p>
-            ${request.funcionario ? `<p><strong>Funcionário:</strong> ${request.funcionario}</p>` : ''}
-            ${request.responsavel ? `<p><strong>Responsável:</strong> ${request.responsavel}</p>` : ''}
-            ${request.turno ? `<p><strong>Turno:</strong> ${request.turno}</p>` : ''}
-            ${request.observacoes ? `<p><strong>Observações:</strong> ${request.observacoes}</p>` : ''}
+            ${request.employee ? `<p><strong>Employee:</strong> ${request.employee}</p>` : ''}
+            ${request.supervisor ? `<p><strong>Supervisor:</strong> ${request.supervisor}</p>` : ''}
+            ${request.shift ? `<p><strong>Shift:</strong> ${request.shift}</p>` : ''}
+            ${request.notes ? `<p><strong>Notes:</strong> ${request.notes}</p>` : ''}
             <hr>
-            <h4>Itens Solicitados:</h4>
+            <h4>Requested Items:</h4>
             <ul id="products-list">${productRows}</ul>
         `;
 
         // Edit button
         if (request.status === 'approved' && !isEditMode) {
             editItemsBtn.style.display = 'block';
-            editItemsBtn.textContent = 'Editar';
+            editItemsBtn.textContent = 'Edit';
             editItemsBtn.onclick = () => {
                 isEditMode = true;
                 renderModalContent(request);
             };
             detailsContainer.appendChild(editItemsBtn);
         } else if (isEditMode) {
-            editItemsBtn.textContent = 'Salvar';
+            editItemsBtn.textContent = 'Save';
             editItemsBtn.onclick = () => {
                 isEditMode = false;
                 saveChanges();
@@ -198,15 +198,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.onclick = () => {
                     const productId = btn.dataset.productId;
                     showConfirmModal(
-                        'Confirmar Exclusão',
-                        'Tem certeza que deseja remover este item?',
+                        'Confirm Deletion',
+                        'Are you sure you want to remove this item?',
                         async () => {
                             try {
                                 await fetchJSON(`${API_URL}/request_items/${currentRequestId}/${productId}`, { method: 'DELETE' });
-                                showModal('Sucesso', 'Item removido!', false);
+                                showModal('Success', 'Item removed!', false);
                                 await showRequestModal(currentRequestId);
                             } catch (e) {
-                                showModal('Erro', e.message, true);
+                                showModal('Error', e.message, true);
                             }
                         }
                     );
@@ -224,20 +224,20 @@ document.addEventListener('DOMContentLoaded', () => {
             renderModalContent(request);
             requestModal.style.display = 'flex';
 
-            // Finalizar
+            // Finalize
             if (request.status === 'approved') {
                 modalEnd.style.display = 'inline-block';
                 modalEnd.onclick = async () => {
                     showConfirmModal(
-                        'Finalizar Requisição',
-                        `Finalizar a requisição #${id}?`,
+                        'Finalize Request',
+                        `Finalize request #${id}?`,
                         async () => {
                             await fetchJSON(`${API_URL}/requests/${id}`, {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ status: 'done' })
                             });
-                            showModal('Sucesso', 'Requisição finalizada!', false);
+                            showModal('Success', 'Request finalized!', false);
                             closeModal();
                             loadRequests();
                         }
@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 modalEnd.style.display = 'none';
             }
         } catch (e) {
-            showModal('Erro', e.message, true);
+            showModal('Error', e.message, true);
         }
     };
 
@@ -289,11 +289,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 await fetchJSON(`${API_URL}/request_items/${currentRequestId}/${productId}`, { method: 'DELETE' });
             }
 
-            showModal('Sucesso', 'Itens atualizados!', false);
+            showModal('Success', 'Items updated!', false);
             isEditMode = false;
             await showRequestModal(currentRequestId);
         } catch (e) {
-            showModal('Erro', e.message, true);
+            showModal('Error', e.message, true);
         }
     };
 
@@ -307,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ).join('');
 
             win.document.write(`
-                <html><head><title>Requisição #${id}</title>
+                <html><head><title>Request #${id}</title>
                 <style>
                     body{font-family:Arial;padding:20px;}
                     h1{text-align:center;color:#695CFE;}
@@ -316,11 +316,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     th{background:#f2f2f2;}
                 </style>
                 </head><body>
-                <h1>Requisição #${id}</h1>
-                <p><strong>Setor:</strong> ${request.sector_name}</p>
-                <p><strong>Data:</strong> ${new Date(request.created_at).toLocaleString()}</p>
-                <h4>Itens:</h4>
-                <table><thead><tr><th>Produto</th><th>Qtd</th><th>Unidade</th></tr></thead><tbody>${rows}</tbody></table>
+                <h1>Request #${id}</h1>
+                <p><strong>Sector:</strong> ${request.sector_name}</p>
+                <p><strong>Date:</strong> ${new Date(request.created_at).toLocaleString()}</p>
+                <h4>Items:</h4>
+                <table><thead><tr><th>Product</th><th>Qty</th><th>Unit</th></tr></thead><tbody>${rows}</tbody></table>
                 </body></html>`);
             win.document.close();
             win.print();
@@ -332,10 +332,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ status: 'printed' })
                 });
                 loadRequests();
-                showModal('Sucesso', 'Impresso!', false);
+                showModal('Success', 'Printed!', false);
             }
         } catch (e) {
-            showModal('Erro', e.message, true);
+            showModal('Error', e.message, true);
         }
     };
 

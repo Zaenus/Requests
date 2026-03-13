@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Requisição de Produtos</title>
+    <title>Product Request</title>
     <link rel="stylesheet" href="css/style.css">
 
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
@@ -13,57 +13,57 @@
     <div class="main-container">
         <div id="form-section" class="form-card">
             <header class="form-header">
-                <h1>REQUISIÇÃO</h1>
-                <p>Preencha os campos para solicitar produtos</p>
+                <h1>REQUEST</h1>
+                <p>Fill in the fields to request products</p>
             </header>
 
             <div class="form-fields">
                 <div class="field-group">
-                    <label for="setor">Setor</label>
-                    <select id="setor" required>
-                        <option value="">Selecione o setor</option>
+                    <label for="sector">Sector</label>
+                    <select id="sector" required>
+                        <option value="">Select sector</option>
                     </select>
                 </div>
                 <div class="field-group">
-                    <label for="data">Data</label>
-                    <input type="text" id="data" readonly>
+                    <label for="date">Date</label>
+                    <input type="text" id="date" readonly>
                 </div>
                 <div class="field-group">
-                    <label for="hora">Hora</label>
-                    <input type="text" id="hora" readonly>
+                    <label for="time">Time</label>
+                    <input type="text" id="time" readonly>
                 </div>
                 <div class="field-group">
-                    <span>Turno</span>
+                    <span>Shift</span>
                     <div class="checkbox-group">
-                        <label class="turno-button"><input type="checkbox" name="turno" value="Manhã"> Manhã</label>
-                        <label class="turno-button"><input type="checkbox" name="turno" value="Tarde"> Tarde</label>
-                        <label class="turno-button"><input type="checkbox" name="turno" value="Noite"> Noite</label>
+                        <label class="shift-button"><input type="checkbox" name="shift" value="Morning"> Morning</label>
+                        <label class="shift-button"><input type="checkbox" name="shift" value="Afternoon"> Afternoon</label>
+                        <label class="shift-button"><input type="checkbox" name="shift" value="Night"> Night</label>
                     </div>
                 </div>
                 <div class="field-group">
-                    <label for="funcionario">Funcionário</label>
-                    <input type="text" id="funcionario" required>
+                    <label for="employee">Employee</label>
+                    <input type="text" id="employee" required>
                 </div>
                 <div class="field-group">
-                    <label for="responsavel">Responsável</label>
-                    <input type="text" id="responsavel" required>
+                    <label for="supervisor">Supervisor</label>
+                    <input type="text" id="supervisor" required>
                 </div>
             </div>
 
             <div class="product-search-section">
-                <h3>Adicionar Produtos</h3>
+                <h3>Add Products</h3>
                 <div class="category-search-box-row">
                     <div class="field-group-inline">
-                        <label for="categoria">Categoria</label>
-                        <select id="categoria">
-                            <option value="">Todas as Categorias</option>
+                        <label for="category">Category</label>
+                        <select id="category">
+                            <option value="">All Categories</option>
                         </select>
                     </div>
                     <div class="field-group-inline">
-                        <label for="product-search">Pesquise um produto específico</label>
+                        <label for="product-search">Search for a specific product</label>
                         <div class="search-box">
-                            <input type="text" id="product-search" placeholder="Pesquisar produto...">
-                            <button id="search-btn">Pesquisar</button>
+                            <input type="text" id="product-search" placeholder="Search product...">
+                            <button id="search-btn">Search</button>
                         </div>
                     </div>
                 </div>
@@ -71,47 +71,47 @@
             </div>
 
             <div class="selected-products-section">
-                <h3>Produtos Selecionados</h3>
+                <h3>Selected Products</h3>
                 <ul id="selected-products-list">
                 </ul>
             </div>
             
             <div class="field-group">
-                <label for="observacoes">Observações (opcional)</label>
-                <textarea id="observacoes" rows="4" placeholder="Adicione observações aqui..."></textarea>
+                <label for="notes">Notes (optional)</label>
+                <textarea id="notes" rows="4" placeholder="Add notes here..."></textarea>
             </div>
 
             <div class="btn-group">
-                <button type="button" class="btn btn-primary" id="btn-confirmar">Confirmar Requisição</button>
+                <button type="button" class="btn btn-primary" id="btn-confirm">Confirm Request</button>
             </div>
         </div>
 
         <div id="confirm-section" class="form-card" style="display: none;">
             <header class="form-header">
-                <h1>Confirme os Dados</h1>
-                <p>Revise as informações antes de enviar</p>
+                <h1>Confirm Details</h1>
+                <p>Review the information before submitting</p>
             </header>
             
             <div class="confirm-details">
-                <p><strong>Setor:</strong> <span id="confirm-setor"></span></p>
-                <p><strong>Turno:</strong> <span id="confirm-turno"></span></p>
-                <p><strong>Data:</strong> <span id="confirm-data"></span></p>
-                <p><strong>Hora:</strong> <span id="confirm-hora"></span></p>
-                <p><strong>Funcionário:</strong> <span id="confirm-funcionario"></span></p>
-                <p><strong>Responsável:</strong> <span id="confirm-responsavel"></span></p>
+                <p><strong>Sector:</strong> <span id="confirm-sector"></span></p>
+                <p><strong>Shift:</strong> <span id="confirm-shift"></span></p>
+                <p><strong>Date:</strong> <span id="confirm-date"></span></p>
+                <p><strong>Time:</strong> <span id="confirm-time"></span></p>
+                <p><strong>Employee:</strong> <span id="confirm-employee"></span></p>
+                <p><strong>Supervisor:</strong> <span id="confirm-supervisor"></span></p>
                 
-                <h3>Itens Solicitados:</h3>
-                <ul id="confirm-produtos"></ul>
+                <h3>Requested Items:</h3>
+                <ul id="confirm-products"></ul>
 
-                <div id="confirm-observacoes-section" style="display: none;">
-                    <h3>Observações:</h3>
-                    <p id="confirm-observacoes"></p>
+                <div id="confirm-notes-section" style="display: none;">
+                    <h3>Notes:</h3>
+                    <p id="confirm-notes"></p>
                 </div>
             </div>
             
             <div class="btn-group">
-                <button type="button" class="btn btn-secondary" id="btn-voltar">Voltar e Editar</button>
-                <button type="button" class="btn btn-primary" id="btn-enviar">Enviar Requisição</button>
+                <button type="button" class="btn btn-secondary" id="btn-back">Back and Edit</button>
+                <button type="button" class="btn btn-primary" id="btn-submit">Submit Request</button>
             </div>
         </div>
         

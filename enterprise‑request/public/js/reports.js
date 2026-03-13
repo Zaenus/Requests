@@ -35,7 +35,7 @@ function closeDetails() {
 async function loadSectors() {
     const res = await fetch('/api/sectors', { credentials: 'include' });
     const sectors = await res.json();
-    sectorSelect.innerHTML = '<option value="">Todos os setores</option>';
+    sectorSelect.innerHTML = '<option value="">All sectors</option>';
     sectors.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s.id;
@@ -53,31 +53,31 @@ async function loadReport() {
     const productFilter = productInput.value.trim();
     if (productFilter)      params.append('product', productFilter);
 
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Carregando...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
 
     try {
         const res = await fetch('/api/reports/approved-items?' + params, { credentials: 'include' });
         if (res.status === 401 || res.status === 403) {
-            window.location.href = '/autorizacao';
+            window.location.href = '/authorization';
             return;
         }
-        if (!res.ok) throw new Error('Erro na API');
+        if (!res.ok) throw new Error('API error');
         const rows = await res.json();
         currentData = rows;
         updateProductSectorSelect();
 
         if (rows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum item encontrado.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No items found.</td></tr>';
             return;
         }
 
         tbody.innerHTML = rows.map(r => `
             <tr data-request-id="${r.request_id}">
                 <td>${r.request_id}</td>
-                <td>${r.setor}</td>
-                <td>${new Date(r.created_at).toLocaleString('pt-BR')}</td>
-                <td>${r.produto}</td>
-                <td>${r.quantidade}</td>
+                <td>${r.sector}</td>
+                <td>${new Date(r.created_at).toLocaleString('en-GB')}</td>
+                <td>${r.product}</td>
+                <td>${r.quantity}</td>
             </tr>
         `).join('');
 
@@ -98,10 +98,10 @@ function renderMonthlySummary() {
     currentData.forEach(r => {
         const date = new Date(r.created_at);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
-        const key = `${r.produto}|||${monthKey}`;
-        if (!grouped[key]) grouped[key] = { product: r.produto, month: monthKey, qty: 0, items: [] };
-        grouped[key].qty += r.quantidade;
-        grouped[key].items.push({ date: r.created_at.split('T')[0], request_id: r.request_id, qty: r.quantidade });
+        const key = `${r.product}|||${monthKey}`;
+        if (!grouped[key]) grouped[key] = { product: r.product, month: monthKey, qty: 0, items: [] };
+        grouped[key].qty += r.quantity;
+        grouped[key].items.push({ date: r.created_at.split('T')[0], request_id: r.request_id, qty: r.quantity });
     });
     const entries = Object.values(grouped);
 
@@ -182,7 +182,7 @@ function renderMonthlySummary() {
                 },
                 title: {
                     display: true,
-                    text: 'Consumo Mensal por Produto'
+                    text: 'Monthly Consumption by Product'
                 }
             },
             scales: {
@@ -190,7 +190,7 @@ function renderMonthlySummary() {
                     stacked: false, // disable stacking for column view
                     title: {
                         display: true,
-                        text: 'Mês'
+                        text: 'Month'
                     }
                 },
                 y: {
@@ -198,7 +198,7 @@ function renderMonthlySummary() {
                     stacked: false,
                     title: {
                         display: true,
-                        text: 'Quantidade'
+                        text: 'Quantity'
                     }
                 }
             },
@@ -216,31 +216,31 @@ function renderMonthlySummary() {
 /* ---------- DRILL-DOWN ---------- */
 function showDaily(product, month) {
     const items = currentData
-        .filter(r => r.produto === product && r.created_at.startsWith(month))
+        .filter(r => r.product === product && r.created_at.startsWith(month))
         .sort((a,b) => a.created_at.localeCompare(b.created_at));
 
     detailProduct.textContent = product;
     detailMonth.textContent = `${month.slice(5)}/${month.slice(0,4)}`;
     detailBody.innerHTML = items.map(r => `
         <tr><td>${r.created_at.split('T')[0].split('-').reverse().join('/')}</td>
-            <td>${r.request_id}</td><td>${r.quantidade}</td></tr>
+            <td>${r.request_id}</td><td>${r.quantity}</td></tr>
     `).join('');
     detailSection.style.display = 'block';
 }
 
 /* ---------- EXPORT TO CSV (RAW + SUMMARY) ---------- */
 function exportToCSV() {
-    if (!currentData.length) return alert('Nenhum dado.');
+    if (!currentData.length) return alert('No data.');
 
     // Raw data
     const rawCSV = [
-        ['Req. ID', 'Setor', 'Data/Hora', 'Produto', 'Quantidade'],
+        ['Req. ID', 'Sector', 'Date/Time', 'Product', 'Quantity'],
         ...currentData.map(r => [
             r.request_id,
-            r.setor,
-            new Date(r.created_at).toLocaleString('pt-BR'),
-            r.produto,
-            r.quantidade
+            r.sector,
+            new Date(r.created_at).toLocaleString('en-GB'),
+            r.product,
+            r.quantity
         ])
     ].map(r => r.join(',')).join('\n');
 
@@ -263,40 +263,40 @@ function exportToCSV() {
     ].map(r => r.join(',')).join('\n');
 
     const fullCSV = `DADOS BRUTOS\n${rawCSV}\n\nRESUMO MENSAL\n${summaryCSV}`;
-    downloadFile('\uFEFF' + fullCSV, 'text/csv', `relatorio_completo_${new Date().toISOString().slice(0,10)}.csv`);
+    downloadFile('\uFEFF' + fullCSV, 'text/csv', `full_report_${new Date().toISOString().slice(0,10)}.csv`);
 }
 
 /* ---------- EXPORT TO PDF (UPDATED) ---------- */
 function exportToPDF() {
-    if (!currentData.length) return alert('Nenhum dado.');
+    if (!currentData.length) return alert('No data.');
 
-    if (typeof window.jspdf === 'undefined') return alert('PDF não carregado.');
+    if (typeof window.jspdf === 'undefined') return alert('PDF library not loaded.');
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
     const pageWidth = doc.internal.pageSize.getWidth();
-    const today = new Date().toLocaleDateString('pt-BR');
+    const today = new Date().toLocaleDateString('en-GB');
 
     doc.setFontSize(16);
-    doc.text('Relatório Completo - Requisições Aprovadas', 14, 20);
+    doc.text('Full Report - Approved Requests', 14, 20);
 
     let y = 30;
     doc.setFontSize(10);
     const filters = [];
-    if (sectorSelect.value) filters.push(`Setor: ${sectorSelect.selectedOptions[0].textContent}`);
-    if (startInput.value) filters.push(`De: ${formatDate(startInput.value)}`);
-    if (endInput.value) filters.push(`Até: ${formatDate(endInput.value)}`);
+    if (sectorSelect.value) filters.push(`Sector: ${sectorSelect.selectedOptions[0].textContent}`);
+    if (startInput.value) filters.push(`From: ${formatDate(startInput.value)}`);
+    if (endInput.value) filters.push(`To: ${formatDate(endInput.value)}`);
     if (filters.length) doc.text('Filtros: ' + filters.join(' | '), 14, y);
     y += 10;
 
     // Raw Table
     const rawData = currentData.map(r => [
-        r.request_id, r.setor,
-        new Date(r.created_at).toLocaleString('pt-BR'),
-        r.produto, r.quantidade
+        r.request_id, r.sector,
+        new Date(r.created_at).toLocaleString('en-GB'),
+        r.product, r.quantity
     ]);
     doc.autoTable({
-        head: [['Req. ID', 'Setor', 'Data/Hora', 'Produto', 'Qtd']],
+        head: [['Req. ID', 'Sector', 'Date/Time', 'Product', 'Qty']],
         body: rawData,
         startY: y,
         theme: 'grid',
@@ -327,10 +327,10 @@ function exportToPDF() {
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
         doc.setFontSize(8);
-        doc.text(`Página ${i} de ${pageCount}`, pageWidth - 30, doc.internal.pageSize.getHeight() - 10);
+        doc.text(`Page ${i} of ${pageCount}`, pageWidth - 30, doc.internal.pageSize.getHeight() - 10);
     }
 
-    doc.save(`relatorio_completo_${new Date().toISOString().slice(0,10)}.pdf`);
+    doc.save(`full_report_${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
 function groupByProductMonth(data) {
@@ -338,9 +338,9 @@ function groupByProductMonth(data) {
     data.forEach(r => {
         const date = new Date(r.created_at);
         const month = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
-        const key = `${r.produto}|||${month}`;
-        if (!map[key]) map[key] = { product: r.produto, month, qty: 0 };
-        map[key].qty += r.quantidade;
+        const key = `${r.product}|||${month}`;
+        if (!map[key]) map[key] = { product: r.product, month, qty: 0 };
+        map[key].qty += r.quantity;
     });
     return Object.values(map);
 }
@@ -373,8 +373,8 @@ function toggleProductBySector() {
 function updateProductSectorSelect() {
     const select = document.getElementById('product-sector-select');
     const current = select.value;
-    const products = [...new Set(currentData.map(r => r.produto))].sort();
-    select.innerHTML = '<option value="">Selecione um produto...</option>';
+    const products = [...new Set(currentData.map(r => r.product))].sort();
+    select.innerHTML = '<option value="">Select a product...</option>';
     products.forEach(p => {
         const opt = document.createElement('option');
         opt.value = p;
@@ -400,10 +400,10 @@ async function loadProductBySector() {
     try {
         const res = await fetch('/api/reports/product-by-sector?' + params, { credentials: 'include' });
         if (res.status === 401 || res.status === 403) {
-            window.location.href = '/autorizacao';
+            window.location.href = '/authorization';
             return;
         }
-        if (!res.ok) throw new Error('Erro na API');
+        if (!res.ok) throw new Error('API error');
         const data = await res.json();
 
         if (!data.length) {
@@ -414,7 +414,7 @@ async function loadProductBySector() {
         chartContainer.style.display = 'block';
 
         document.getElementById('product-sector-body').innerHTML = data.map(d =>
-            `<tr><td>${d.setor}</td><td>${d.total}</td></tr>`
+            `<tr><td>${d.sector}</td><td>${d.total}</td></tr>`
         ).join('');
 
         try {
@@ -423,7 +423,7 @@ async function loadProductBySector() {
             productSectorChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: data.map(d => d.setor),
+                    labels: data.map(d => d.sector),
                     datasets: [{
                         label: product,
                         data: data.map(d => d.total),
@@ -439,12 +439,12 @@ async function loadProductBySector() {
                         legend: { display: false },
                         title: {
                             display: true,
-                            text: `Uso de "${product}" por Setor`
+                            text: `Usage of "${product}" by Sector`
                         }
                     },
                     scales: {
-                        x: { title: { display: true, text: 'Setor' } },
-                        y: { beginAtZero: true, title: { display: true, text: 'Quantidade' } }
+                        x: { title: { display: true, text: 'Sector' } },
+                        y: { beginAtZero: true, title: { display: true, text: 'Quantity' } }
                     }
                 }
             });

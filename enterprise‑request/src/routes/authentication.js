@@ -11,10 +11,10 @@ router.post('/login', async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await db.getAsync('SELECT * FROM users WHERE username = ?', [username]);
-    if (!user) return res.status(401).json({ error: 'Usuário ou senha incorretos.' });
+    if (!user) return res.status(401).json({ error: 'Invalid username or password.' });
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(401).json({ error: 'Usuário ou senha incorretos.' });
+    if (!match) return res.status(401).json({ error: 'Invalid username or password.' });
 
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
@@ -33,7 +33,7 @@ router.post('/login', async (req, res) => {
 
     res.json({ username: user.username, role: user.role });
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao fazer login: ' + err.message });
+    res.status(500).json({ error: 'Login error: ' + err.message });
   }
 });
 

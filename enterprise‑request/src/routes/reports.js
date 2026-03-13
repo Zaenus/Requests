@@ -31,10 +31,10 @@ router.get('/approved-items', async (req, res) => {
   const sql = `
     SELECT
       r.id               AS request_id,
-      s.name             AS setor,
+      s.name             AS sector,
       r.created_at,
-      p.name             AS produto,
-      ri.quantity        AS quantidade,
+      p.name             AS product,
+      ri.quantity        AS quantity,
       r.status
     FROM requests r
     JOIN sectors   s  ON r.sector_id = s.id
@@ -71,7 +71,7 @@ router.get('/product-by-sector', async (req, res) => {
 
   const sql = `
     SELECT
-      s.name             AS setor,
+      s.name             AS sector,
       SUM(ri.quantity)   AS total
     FROM requests r
     JOIN sectors   s  ON r.sector_id = s.id

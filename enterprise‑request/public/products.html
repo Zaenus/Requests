@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciar Setores</title>
-    <link rel="stylesheet" href="./css/produtos.css">
+    <title>Manage Sectors</title>
+    <link rel="stylesheet" href="./css/products.css">
 </head>
 <body>
 
@@ -15,10 +15,10 @@
             </div>
             <nav>
                 <ul>
-                    <a href="/deposito">
+                    <a href="/deposit">
                         <li class="nav-item">
                             <ion-icon name="document-text-outline"></ion-icon>
-                            <span>Requisições</span>
+                            <span>Requests</span>
                         </li>
                     </a>
                     <a href="/adm">
@@ -27,16 +27,16 @@
                             <span>Admin</span>
                         </li>
                     </a>
-                    <a href="/setores">
+                    <a href="/sectors">
                         <li class="nav-item selected">
                             <ion-icon name="cube-outline"></ion-icon>
-                            <span>Setores</span>
+                            <span>Sectors</span>
                         </li>
                     </a>
-                    <a href="/relatorios">
+                    <a href="/reports">
                         <li class="nav-item">
                             <ion-icon name="bar-chart-outline"></ion-icon>
-                            <span>Relatórios</span>
+                            <span>Reports</span>
                         </li>
                     </a>
                 </ul>
@@ -46,7 +46,7 @@
         <div class="main-content">
             <div class="top-bar">
                 <div class="search-box">
-                    <input type="text" placeholder="Pesquisar...">
+                    <input type="text" placeholder="Search...">
                     <button><ion-icon name="search-outline"></ion-icon></button>
                 </div>
                 <div class="user-profile">
@@ -56,11 +56,11 @@
                 </div>
             </div>
 
-            <div id="produtos-content" class="content-section" style="display: block;">
-                <h2>Gerenciamento de Setores</h2>
+            <div id="products-content" class="content-section" style="display: block;">
+                <h2>Sector Management</h2>
                 <div class="admin-grid">
                     <div class="admin-section" style="width: 100%;">
-                        <h3>Setores Cadastrados</h3>
+                        <h3>Registered Sectors</h3>
                         <div id="sectors-list">
                             </div>
                     </div>
@@ -72,7 +72,7 @@
         <div id="products-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
-            <h3 id="modal-title">Produtos do Setor <span id="selected-sector-name"></span></h3>
+            <h3 id="modal-title">Sector Products <span id="selected-sector-name"></span></h3>
             <div id="products-list">
                 </div>
         </div>
@@ -81,34 +81,34 @@
     <div id="edit-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
-            <h3>Editar Produto</h3>
+            <h3>Edit Product</h3>
             <div class="edit-form-container">
                 <div class="input-group">
-                    <label for="edit-product-name">Nome do Produto:</label>
+                    <label for="edit-product-name">Product Name:</label>
                     <input type="text" id="edit-product-name">
                 </div>
                 <div class="input-group">
-                    <label for="edit-product-unit">Unidade:</label>
+                    <label for="edit-product-unit">Unit:</label>
                     <input type="text" id="edit-product-unit">
                 </div>
-                <button class="btn btn-primary" id="save-edit-btn">Salvar Alterações</button>
+                <button class="btn btn-primary" id="save-edit-btn">Save Changes</button>
             </div>
         </div>
     </div>
 
     <div id="confirm-modal" class="modal">
         <div class="modal-content">
-            <h3>Confirmação</h3>
+            <h3>Confirmation</h3>
             <p id="confirm-message"></p>
             <div class="btn-group">
-                <button class="btn btn-secondary" id="cancel-action-btn">Voltar</button>
-                <button class="btn btn-primary" id="confirm-action-btn">Confirmar</button>
+                <button class="btn btn-secondary" id="cancel-action-btn">Back</button>
+                <button class="btn btn-primary" id="confirm-action-btn">Confirm</button>
             </div>
         </div>
     </div>
 <div id="success-modal" class="modal">
     <div class="modal-content">
-        <h3>Sucesso!</h3>
+        <h3>Success!</h3>
         <p id="success-message"></p>
         <div class="btn-group" style="justify-content: flex-end;">
             <button class="btn btn-primary" id="success-ok-btn">OK</button>
@@ -118,13 +118,13 @@
 <div id="edit-sector-modal" class="modal">
     <div class="modal-content">
         <span class="close-btn">&times;</span>
-        <h3>Editar Setor</h3>
+        <h3>Edit Sector</h3>
         <div class="edit-form-container">
             <div class="input-group">
-                <label for="edit-sector-name">Nome do Setor:</label>
+                <label for="edit-sector-name">Sector Name:</label>
                 <input type="text" id="edit-sector-name">
             </div>
-            <button class="btn btn-primary" id="save-sector-edit-btn">Salvar Alterações</button>
+            <button class="btn btn-primary" id="save-sector-edit-btn">Save Changes</button>
         </div>
     </div>
 </div>

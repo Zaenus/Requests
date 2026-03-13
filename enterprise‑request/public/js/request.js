@@ -3,8 +3,8 @@ let productData = {};
 document.addEventListener('DOMContentLoaded', () => {
     const formSection = document.getElementById('form-section');
     const confirmSection = document.getElementById('confirm-section');
-    const setorSelect = document.getElementById('setor');
-    const categoriaSelect = document.getElementById('categoria');
+    const sectorSelect = document.getElementById('sector');
+    const categorySelect = document.getElementById('category');
     const productSearch = document.getElementById('product-search');
     const searchBtn = document.getElementById('search-btn');
     const searchResults = document.getElementById('search-results');
@@ -12,13 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalMessage = document.getElementById('modal-message');
     const modalText = document.getElementById('modal-text');
     const modalClose = document.getElementById('modal-close');
-    const dataInput = document.getElementById('data');
-    const horaInput = document.getElementById('hora');
-    const observacoesInput = document.getElementById('observacoes');
+    const dateInput = document.getElementById('date');
+    const timeInput = document.getElementById('time');
+    const notesInput = document.getElementById('notes');
     
     const now = new Date();
-    dataInput.value = now.toLocaleDateString('pt-BR');
-    horaInput.value = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    dateInput.value = now.toLocaleDateString('en-GB');
+    timeInput.value = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
     let selectedProducts = [];
 
@@ -58,97 +58,97 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === modalMessage) hideModal();
     });
 
-    // ────── TURNO BUTTONS ──────
-    const turnoButtons = document.querySelectorAll('.turno-button');
-    turnoButtons.forEach(button => {
+    // ────── SHIFT BUTTONS ──────
+    const shiftButtons = document.querySelectorAll('.shift-button');
+    shiftButtons.forEach(button => {
         button.addEventListener('click', () => {
-            turnoButtons.forEach(btn => btn.classList.remove('selected'));
+            shiftButtons.forEach(btn => btn.classList.remove('selected'));
             button.classList.add('selected');
         });
     });
 
-    // ────── FETCH SECTORES ──────
-    async function fetchSetores() {
+    // ────── FETCH SECTORS ──────
+    async function fetchSectors() {
         try {
             const response = await fetch('/api/sectors');
-            const setores = await response.json();
-            setores.forEach(setor => {
+            const sectors = await response.json();
+            sectors.forEach(sector => {
                 const option = document.createElement('option');
-                option.value = setor.name;
-                option.textContent = setor.name;
-                setorSelect.appendChild(option);
+                option.value = sector.name;
+                option.textContent = sector.name;
+                sectorSelect.appendChild(option);
             });
         } catch (error) {
-            console.error("Erro ao carregar setores:", error);
-            showModal('Erro ao carregar os setores do servidor.', 'erro');
+            console.error("Error loading sectors:", error);
+            showModal('Error loading sectors from server.', 'erro');
         }
     }
 
-    // ────── FETCH PRODUTOS ──────
-    async function fetchProdutos(setor) {
+    // ────── FETCH PRODUCTS ──────
+    async function fetchProducts(sector) {
         try {
-            const response = await fetch(`/api/catalog/products?sector_name=${encodeURIComponent(setor)}`);
+            const response = await fetch(`/api/catalog/products?sector_name=${encodeURIComponent(sector)}`);
             const products = await response.json();
             productData = {
-                "Geral": products.map(p => {
+                "General": products.map(p => {
                     if (!p.id || !p.name || !p.unit) return null;
-                    return { id: p.id, nome: p.name, und: p.unit };
+                    return { id: p.id, name: p.name, unit: p.unit };
                 }).filter(p => p !== null)
             };
             if (products.length === 0) {
-                showModal('Nenhum produto encontrado para o setor selecionado.', 'erro');
+                showModal('No products found for the selected sector.', 'erro');
             }
             populateCategories(productData);
         } catch (error) {
-            console.error("Erro ao carregar produtos:", error);
-            showModal('Erro ao carregar os produtos do servidor.', 'erro');
+            console.error("Error loading products:", error);
+            showModal('Error loading products from server.', 'erro');
         }
     }
 
-    fetchSetores();
+    fetchSectors();
 
-    // ────── CATEGORIAS ──────
+    // ────── CATEGORIES ──────
     function populateCategories(products) {
-        categoriaSelect.innerHTML = '<option value="">Todas as Categorias</option>';
+        categorySelect.innerHTML = '<option value="">All Categories</option>';
         if (products) {
             Object.keys(products).forEach(cat => {
                 const option = document.createElement('option');
                 option.value = cat;
                 option.textContent = cat;
-                categoriaSelect.appendChild(option);
+                categorySelect.appendChild(option);
             });
         }
     }
 
     // ────── FILTER & DISPLAY ──────
     function filterAndDisplayProducts() {
-        const setor = setorSelect.value;
-        const categoria = categoriaSelect.value;
+        const sector = sectorSelect.value;
+        const category = categorySelect.value;
         const query = productSearch.value.toLowerCase();
         
-        if (!setor) return;
+        if (!sector) return;
 
         const allProductsInSector = Object.values(productData).flat();
         let productsToFilter = allProductsInSector;
 
-        if (categoria) {
-            productsToFilter = productData[categoria] || [];
+        if (category) {
+            productsToFilter = productData[category] || [];
         }
 
         let results = productsToFilter;
         if (query.length > 1) {
-            results = productsToFilter.filter(p => p.nome.toLowerCase().includes(query));
+            results = productsToFilter.filter(p => p.name.toLowerCase().includes(query));
         }
         
         displaySearchResults(results);
     }
 
-    setorSelect.addEventListener('change', (e) => {
+    sectorSelect.addEventListener('change', (e) => {
         const selectedSector = e.target.value;
         if (selectedSector) {
-            fetchProdutos(selectedSector);
+            fetchProducts(selectedSector);
         } else {
-            categoriaSelect.innerHTML = '<option value="">Todas as Categorias</option>';
+            categorySelect.innerHTML = '<option value="">All Categories</option>';
         }
         searchResults.innerHTML = '';
         selectedProducts = [];
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
         hideModal();
     });
 
-    categoriaSelect.addEventListener('change', () => {
+    categorySelect.addEventListener('change', () => {
         productSearch.value = '';
         filterAndDisplayProducts();
     });
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function displaySearchResults(results) {
         searchResults.innerHTML = '';
         if (results.length === 0) {
-            searchResults.innerHTML = '<p class="search-info">Nenhum produto encontrado.</p>';
+            searchResults.innerHTML = '<p class="search-info">No products found.</p>';
             return;
         }
 
@@ -177,10 +177,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const resultItem = document.createElement('div');
             resultItem.className = 'search-item';
             resultItem.innerHTML = `
-                <span>${p.nome} (${p.und})</span>
+                <span>${p.name} (${p.unit})</span>
                 <div class="add-item-controls">
                     <input type="number" value="1" min="1">
-                    <button class="add-btn" data-id="${p.id}" data-nome="${p.nome}" data-und="${p.und}">Adicionar</button>
+                    <button class="add-btn" data-id="${p.id}" data-name="${p.name}" data-unit="${p.unit}">Add</button>
                 </div>
             `;
             searchResults.appendChild(resultItem);
@@ -191,24 +191,24 @@ document.addEventListener('DOMContentLoaded', () => {
     searchResults.addEventListener('click', (e) => {
         if (e.target.classList.contains('add-btn')) {
             const id = e.target.dataset.id;
-            const nome = e.target.dataset.nome;
-            const und = e.target.dataset.und;
-            const quantidadeInput = e.target.previousElementSibling;
-            const quantidade = parseInt(quantidadeInput.value);
+            const name = e.target.dataset.name;
+            const unit = e.target.dataset.unit;
+            const quantityInput = e.target.previousElementSibling;
+            const quantity = parseInt(quantityInput.value);
 
-            if (!id || !nome || !und) {
-                showModal('Erro: Produto com dados inválidos.', 'erro');
+            if (!id || !name || !unit) {
+                showModal('Error: Product with invalid data.', 'erro');
                 return;
             }
 
-            if (quantidade > 0) {
+            if (quantity > 0) {
                 const existingProduct = selectedProducts.find(p => p.id === id);
                 if (existingProduct) {
-                    existingProduct.quantidade += quantidade;
-                    showToast(`+${quantidade} ${nome} adicionado!`);
+                    existingProduct.quantity += quantity;
+                    showToast(`+${quantity} ${name} added!`);
                 } else {
-                    selectedProducts.push({ id, nome, und, quantidade });
-                    showToast(`${nome} adicionado à lista!`);
+                    selectedProducts.push({ id, name, unit, quantity });
+                    showToast(`${name} added to the list!`);
                 }
                 renderSelectedProducts();
                 productSearch.value = '';
@@ -230,61 +230,61 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderSelectedProducts() {
         selectedProductsList.innerHTML = '';
         if (selectedProducts.length === 0) {
-            selectedProductsList.innerHTML = '<li class="no-items">Nenhum produto adicionado.</li>';
+            selectedProductsList.innerHTML = '<li class="no-items">No products added.</li>';
         } else {
             selectedProducts.forEach(p => {
                 const li = document.createElement('li');
                 li.className = 'selected-item';
                 li.innerHTML = `
-                    <span>${p.nome} (${p.und}) - Qtd: ${p.quantidade}</span>
-                    <button class="remove-btn" data-id="${p.id}">Remover</button>
+                    <span>${p.name} (${p.unit}) - Qty: ${p.quantity}</span>
+                    <button class="remove-btn" data-id="${p.id}">Remove</button>
                 `;
                 selectedProductsList.appendChild(li);
             });
         }
     }
     
-    // ────── CONFIRMAR ──────
-    document.getElementById('btn-confirmar').addEventListener('click', () => {
-        const setor = setorSelect.value;
-        const turnoButton = document.querySelector('.turno-button.selected');
-        const funcionario = document.getElementById('funcionario').value;
-        const responsavel = document.getElementById('responsavel').value;
-        const observacoes = observacoesInput.value;
+    // ────── CONFIRM ──────
+    document.getElementById('btn-confirm').addEventListener('click', () => {
+        const sector = sectorSelect.value;
+        const shiftButton = document.querySelector('.shift-button.selected');
+        const employee = document.getElementById('employee').value;
+        const supervisor = document.getElementById('supervisor').value;
+        const notes = notesInput.value;
 
-        if (!setor || !turnoButton || !funcionario || !responsavel) {
-            showModal('Por favor, preencha todos os campos obrigatórios.', 'erro');
+        if (!sector || !shiftButton || !employee || !supervisor) {
+            showModal('Please fill in all required fields.', 'erro');
             return;
         }
         
         if (selectedProducts.length === 0) {
-            showModal('Por favor, adicione pelo menos um produto à lista.', 'erro');
+            showModal('Please add at least one product to the list.', 'erro');
             return;
         }
 
-        const turno = turnoButton.querySelector('input').value;
+        const shift = shiftButton.querySelector('input').value;
         
-        document.getElementById('confirm-setor').textContent = setor;
-        document.getElementById('confirm-turno').textContent = turno;
-        document.getElementById('confirm-data').textContent = dataInput.value;
-        document.getElementById('confirm-hora').textContent = horaInput.value;
-        document.getElementById('confirm-funcionario').textContent = funcionario;
-        document.getElementById('confirm-responsavel').textContent = responsavel;
+        document.getElementById('confirm-sector').textContent = sector;
+        document.getElementById('confirm-shift').textContent = shift;
+        document.getElementById('confirm-date').textContent = dateInput.value;
+        document.getElementById('confirm-time').textContent = timeInput.value;
+        document.getElementById('confirm-employee').textContent = employee;
+        document.getElementById('confirm-supervisor').textContent = supervisor;
 
-        const confirmProdutosList = document.getElementById('confirm-produtos');
-        confirmProdutosList.innerHTML = '';
+        const confirmProductsList = document.getElementById('confirm-products');
+        confirmProductsList.innerHTML = '';
         selectedProducts.forEach(p => {
             const li = document.createElement('li');
-            li.textContent = `${p.nome}: ${p.quantidade} (${p.und})`;
-            confirmProdutosList.appendChild(li);
+            li.textContent = `${p.name}: ${p.quantity} (${p.unit})`;
+            confirmProductsList.appendChild(li);
         });
 
-        if (observacoes.trim() !== '') {
-            document.getElementById('confirm-observacoes').textContent = observacoes;
-            document.getElementById('confirm-observacoes-section').style.display = 'block';
+        if (notes.trim() !== '') {
+            document.getElementById('confirm-notes').textContent = notes;
+            document.getElementById('confirm-notes-section').style.display = 'block';
         } else {
-            document.getElementById('confirm-observacoes').textContent = '';
-            document.getElementById('confirm-observacoes-section').style.display = 'none';
+            document.getElementById('confirm-notes').textContent = '';
+            document.getElementById('confirm-notes-section').style.display = 'none';
         }
 
         formSection.style.display = 'none';
@@ -292,73 +292,74 @@ document.addEventListener('DOMContentLoaded', () => {
         hideModal();
     });
 
-    // ────── VOLTAR ──────
-    document.getElementById('btn-voltar').addEventListener('click', () => {
+    // ────── BACK ──────
+    document.getElementById('btn-back').addEventListener('click', () => {
         formSection.style.display = 'block';
         confirmSection.style.display = 'none';
     });
-    // ────── ENVIAR (FIXED: Send UTC) ──────
-    document.getElementById('btn-enviar').addEventListener('click', async () => {
-        const setor = setorSelect.value;
-        const turno = document.querySelector('.turno-button.selected input').value;
-        const funcionario = document.getElementById('funcionario').value;
-        const responsavel = document.getElementById('responsavel').value;
-        const data = dataInput.value; // "30/10/2025"
-        const hora = horaInput.value; // "15:51"
-        const observacoes = observacoesInput.value;
+
+    // ────── SUBMIT (Send UTC) ──────
+    document.getElementById('btn-submit').addEventListener('click', async () => {
+        const sector = sectorSelect.value;
+        const shift = document.querySelector('.shift-button.selected input').value;
+        const employee = document.getElementById('employee').value;
+        const supervisor = document.getElementById('supervisor').value;
+        const date = dateInput.value; // "30/10/2025"
+        const time = timeInput.value; // "15:51"
+        const notes = notesInput.value;
 
         // ────── CONVERT LOCAL → UTC ──────
-        const [day, month, year] = data.split('/');
-        const [hour, minute] = hora.split(':');
+        const [day, month, year] = date.split('/');
+        const [hour, minute] = time.split(':');
         const localDate = new Date(year, month - 1, day, hour, minute);
         const utcDate = new Date(localDate.getTime());
-        const data_utc = utcDate.toISOString().slice(0, 10); // YYYY-MM-DD
-        const hora_utc = utcDate.toTimeString().slice(0, 5);  // HH:MM
+        const date_utc = utcDate.toISOString().slice(0, 10); // YYYY-MM-DD
+        const time_utc = utcDate.toTimeString().slice(0, 5);  // HH:MM
 
-        const dadosParaEnvio = {
-            setor,
-            turno,
-            data: data_utc,
-            hora: hora_utc,
-            funcionario,
-            responsavel,
-            produtos: selectedProducts.map(p => ({
+        const requestPayload = {
+            sector,
+            shift,
+            date: date_utc,
+            time: time_utc,
+            employee,
+            supervisor,
+            products: selectedProducts.map(p => ({
                 id: p.id,
-                quantidade: p.quantidade
+                quantity: p.quantity
             })),
-            observacoes
+            notes
         };
 
-        console.log('Enviando (UTC):', data_utc, hora_utc); // Debug
+        console.log('Submitting (UTC):', date_utc, time_utc); // Debug
 
         try {
-            const response = await fetch('/api/requests/enviar_requisicao', {
+            const response = await fetch('/api/requests/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dadosParaEnvio)
+                body: JSON.stringify(requestPayload)
             });
 
             if (response.ok) {
-                showModal('Requisição enviada com sucesso!', 'sucesso');
+                showModal('Request submitted successfully!', 'sucesso');
                 // Reset form...
-                document.getElementById('funcionario').value = '';
-                document.getElementById('responsavel').value = '';
-                document.getElementById('observacoes').value = '';
-                document.querySelectorAll('.turno-button').forEach(btn => btn.classList.remove('selected'));
+                document.getElementById('employee').value = '';
+                document.getElementById('supervisor').value = '';
+                document.getElementById('notes').value = '';
+                document.querySelectorAll('.shift-button').forEach(btn => btn.classList.remove('selected'));
                 selectedProducts = [];
                 renderSelectedProducts();
-                setorSelect.value = '';
-                categoriaSelect.innerHTML = '<option value="">Todas as Categorias</option>';
+                sectorSelect.value = '';
+                categorySelect.innerHTML = '<option value="">All Categories</option>';
                 productSearch.value = '';
                 formSection.style.display = 'block';
                 confirmSection.style.display = 'none';
                 setTimeout(() => location.reload(), 1500);
             } else {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Erro desconhecido');
+                throw new Error(errorData.error || 'Unknown error');
             }
         } catch (error) {
-            showModal(`Erro: ${error.message}`, 'erro');
+            showModal(`Error: ${error.message}`, 'erro');
         }
     });
 });

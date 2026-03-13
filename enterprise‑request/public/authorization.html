@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authorization Panel</title>
+    <link rel="stylesheet" href="./css/authorization.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <div class="logo-graal-sidebar">
+                <img src="/images/logo_preto.png" alt="Graal">
+            </div>
+            <nav>
+                <ul>
+                    <a href="/authorization">
+                        <li class="nav-item selected">
+                            <ion-icon name="document-text-outline"></ion-icon>
+                            <span>Authorization</span>
+                        </li>
+                    </a>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <div class="top-bar">
+                <div class="search-box">
+                    <input type="text" placeholder="Search...">
+                    <button><ion-icon name="search-outline"></ion-icon></button>
+                </div>
+                <div class="user-profile">
+                    <span id="username-display">Supervisor</span>
+                    <ion-icon name="chevron-down-outline"></ion-icon>
+                </div>
+            </div>
+
+            <div id="authorization-content" class="content-section">
+                <h2>Requests to Authorize</h2>
+                <div class="requisition-table-container">
+                    <table class="requisition-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Sector</th>
+                                <th>Date/Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="authorization-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="request-details-modal" class="modal-details" style="display: none;">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeRequestDetailsModal()">&times;</span>
+            <h3 id="modal-title">Request Details <span id="requisition-id-title"></span></h3>
+            <div id="requisition-details-container"></div>
+            <div class="btn-group" style="justify-content: space-between;">
+                <div>
+                    <button class="btn btn-secondary" onclick="closeRequestDetailsModal()">Back</button>
+                    <button class="btn btn-primary" id="edit-items-btn" onclick="toggleEditMode()">Edit Items</button>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn-action btn-recusar" id="reject-btn-modal">Reject</button>
+                    <button class="btn-action btn-confirmar" id="approve-btn-modal">Approve</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeLoginModal()">&times;</span>
+            <h3>Supervisor Login</h3>
+            <div class="login-form-container">
+                <div class="input-group">
+                    <label for="login-username">Username:</label>
+                    <input type="text" id="login-username">
+                </div>
+                <div class="input-group">
+                    <label for="login-password">Password:</label>
+                    <input type="password" id="login-password">
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="login-btn">Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script src="./js/api.js"></script>
+    <script src="./js/authorization.js"></script>
+</body>
+</html>
