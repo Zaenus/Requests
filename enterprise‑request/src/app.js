@@ -82,6 +82,7 @@ app.get('/adm',         (req, res) => res.sendFile(path.join(__dirname, '..', 'p
 app.get('/authorization', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'authorization.html')));
 app.get('/sectors',      (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'products.html')));
 app.get('/reports',      (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'reports.html')));
+app.get('/product-entry', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'product-entry.html')));
 
 // API routes — authentication & health are always public
 app.use('/api/authentication', loginLimiter, require('./routes/authentication'));

@@ -6,13 +6,21 @@ const db = require('../db');
 const productSchema = z.object({
   sector_id: z.number({ coerce: true }).int().positive(),
   name: z.string().min(1, 'name required'),
-  unit: z.string().min(1, 'unit required')
+  unit: z.string().min(1, 'unit required'),
+  quantity: z.number({ coerce: true }).nonnegative().optional().default(0),
+  inventory: z.number({ coerce: true }).nonnegative().optional().default(0),
+  cost_per_unit: z.number({ coerce: true }).nonnegative().optional().default(0),
+  supplier: z.string().optional().default('')
 });
 
 const productUpdateSchema = z.object({
   sector_id: z.number({ coerce: true }).int().positive().optional(),
   name: z.string().min(1, 'name required'),
-  unit: z.string().min(1, 'unit required')
+  unit: z.string().min(1, 'unit required'),
+  quantity: z.number({ coerce: true }).nonnegative().optional().default(0),
+  inventory: z.number({ coerce: true }).nonnegative().optional().default(0),
+  cost_per_unit: z.number({ coerce: true }).nonnegative().optional().default(0),
+  supplier: z.string().optional().default('')
 });
 
 const requestStatusSchema = z.object({
@@ -244,14 +252,14 @@ router.post('/products', async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.issues[0].message });
   }
-  const { sector_id, name, unit } = parsed.data;
+  const { sector_id, name, unit, quantity, inventory, cost_per_unit, supplier } = parsed.data;
 
   try {
     const { lastID } = await db.runAsync(
-      'INSERT INTO products (sector_id, name, unit) VALUES (?, ?, ?)',
-      [sector_id, name, unit]
+      'INSERT INTO products (sector_id, name, unit, quantity, inventory, cost_per_unit, supplier) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [sector_id, name, unit, quantity, inventory, cost_per_unit, supplier]
     );
-    res.status(201).json({ id: lastID, sector_id, name, unit });
+    res.status(201).json({ id: lastID, sector_id, name, unit, quantity, inventory, cost_per_unit, supplier });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -263,15 +271,15 @@ router.put('/products/:id', async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.issues[0].message });
   }
-  const { sector_id, name, unit } = parsed.data;
+  const { sector_id, name, unit, quantity, inventory, cost_per_unit, supplier } = parsed.data;
 
   try {
     const { changes } = await db.runAsync(
-      'UPDATE products SET sector_id = ?, name = ?, unit = ? WHERE id = ?',
-      [sector_id || null, name, unit, id]
+      'UPDATE products SET sector_id = ?, name = ?, unit = ?, quantity = ?, inventory = ?, cost_per_unit = ?, supplier = ? WHERE id = ?',
+      [sector_id || null, name, unit, quantity, inventory, cost_per_unit, supplier, id]
     );
     if (changes === 0) return res.status(404).json({ error: 'Product not found' });
-    res.json({ success: true, id, sector_id, name, unit });
+    res.json({ success: true, id, sector_id, name, unit, quantity, inventory, cost_per_unit, supplier });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

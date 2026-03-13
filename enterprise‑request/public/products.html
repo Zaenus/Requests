@@ -33,6 +33,12 @@
                             <span>Sectors</span>
                         </li>
                     </a>
+                    <a href="/product-entry">
+                        <li class="nav-item">
+                            <ion-icon name="pricetag-outline"></ion-icon>
+                            <span>Products</span>
+                        </li>
+                    </a>
                     <a href="/reports">
                         <li class="nav-item">
                             <ion-icon name="bar-chart-outline"></ion-icon>
@@ -90,6 +96,22 @@
                 <div class="input-group">
                     <label for="edit-product-unit">Unit:</label>
                     <input type="text" id="edit-product-unit">
+                </div>
+                <div class="input-group">
+                    <label for="edit-product-quantity">Quantity:</label>
+                    <input type="number" id="edit-product-quantity" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label for="edit-product-inventory">Inventory:</label>
+                    <input type="number" id="edit-product-inventory" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label for="edit-product-cost">Cost per Unit:</label>
+                    <input type="number" id="edit-product-cost" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label for="edit-product-supplier">Supplier:</label>
+                    <input type="text" id="edit-product-supplier">
                 </div>
                 <button class="btn btn-primary" id="save-edit-btn">Save Changes</button>
             </div>

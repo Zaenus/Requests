@@ -30,6 +30,10 @@
                     <li class="nav-item"><ion-icon name="cube-outline"></ion-icon><span>Sectors</span>
                     </li>
                 </a>
+                <a href="/product-entry">
+                    <li class="nav-item"><ion-icon name="pricetag-outline"></ion-icon><span>Products</span>
+                    </li>
+                </a>
                 <a href="/reports">
                     <li class="nav-item selected"><ion-icon name="bar-chart-outline"></ion-icon><span>Reports</span>
                     </li>
@@ -89,6 +93,9 @@
                             <th>Date/Time</th>
                             <th>Product</th>
                             <th>Quantity</th>
+                            <th>Cost / Unit</th>
+                            <th>Total Cost</th>
+                            <th>Supplier</th>
                         </tr>
                     </thead>
                     <tbody id="report-table-body"></tbody>
@@ -151,7 +158,7 @@
                         </div>
                         <div class="requisition-table-container">
                             <table class="requisition-table">
-                                <thead><tr><th>Sector</th><th>Total</th></tr></thead>
+                                <thead><tr><th>Sector</th><th>Total Qty</th><th>Total Cost</th></tr></thead>
                                 <tbody id="product-sector-body"></tbody>
                             </table>
                         </div>
