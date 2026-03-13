@@ -95,7 +95,7 @@ input:focus, select:focus, textarea:focus {
     border-color: var(--primary-color);
 }
 
-/* Novo estilo para os botões de turno */
+/* Shift toggle button styles */
 .checkbox-group {
     display: flex;
     gap: 1em;
@@ -103,7 +103,7 @@ input:focus, select:focus, textarea:focus {
     align-items: center;
 }
 
-.turno-button {
+.shift-button {
     cursor: pointer;
     background-color: #f1f1f1;
     color: var(--text-color);
@@ -114,18 +114,18 @@ input:focus, select:focus, textarea:focus {
     transition: background-color 0.2s, color 0.2s;
 }
 
-.turno-button input[type="checkbox"] {
+.shift-button input[type="checkbox"] {
     display: none; /* Oculta o checkbox nativo */
 }
 
-/* Estiliza o botão quando ele está selecionado */
-.turno-button.selected {
+/* Styles the button when it is selected */
+.shift-button.selected {
     background-color: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
 }
 
-/* Estilos da nova seção de produtos */
+/* Product section styles */
 .product-search-section, .selected-products-section {
     margin-top: 2em;
 }
@@ -250,7 +250,7 @@ h3 {
 .sucesso { background-color: #d4edda; color: #155724; }
 .erro { background-color: #f8d7da; color: #721c24; }
 
-/* Estilo da tela de confirmação */
+/* Confirmation screen style */
 .confirm-details {
     padding: 1em;
     border-radius: 6px;

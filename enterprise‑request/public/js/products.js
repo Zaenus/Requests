@@ -55,21 +55,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---------- Render Sectors ----------
-  function renderSectors(setores) {
+  function renderSectors(sectors) {
     sectorsListContainer.innerHTML = '';
-    if (!setores || setores.length === 0) {
-      sectorsListContainer.innerHTML = '<p>Nenhum setor cadastrado.</p>';
+    if (!sectors || sectors.length === 0) {
+      sectorsListContainer.innerHTML = '<p>No sectors registered.</p>';
       return;
     }
 
-    const rows = setores.map(s => `
+    const rows = sectors.map(s => `
       <tr>
         <td>${s.id}</td>
         <td><a href="#" onclick="window.showProductsModal(${s.id}, '${s.name}')">${s.name}</a></td>
         <td>
           <div class="action-buttons-cell">
-            <button class="btn-action btn-editar" onclick="window.editSector(${s.id}, '${s.name}')">Editar</button>
-            <button class="btn-action btn-excluir" onclick="window.confirmDelete('sector', ${s.id})">Excluir</button>
+            <button class="btn-action btn-editar" onclick="window.editSector(${s.id}, '${s.name}')">Edit</button>
+            <button class="btn-action btn-excluir" onclick="window.confirmDelete('sector', ${s.id})">Delete</button>
           </div>
         </td>
       </tr>
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     sectorsListContainer.innerHTML = `
       <table class="admin-list-table">
-        <thead><tr><th>ID</th><th>Nome</th><th>Ações</th></tr></thead>
+        <thead><tr><th>ID</th><th>Name</th><th>Actions</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     `;
@@ -85,8 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- Load Sectors ----------
   async function loadSectors() {
-    const setores = await fetchJSON(`${API_URL}/sectors`);
-    renderSectors(setores);
+    const sectors = await fetchJSON(`${API_URL}/sectors`);
+    renderSectors(sectors);
   }
 
   // ---------- Products Modal ----------
@@ -94,30 +94,30 @@ document.addEventListener('DOMContentLoaded', () => {
     currentSectorId = sectorId;
     selectedSectorName.textContent = sectorName;
     try {
-      const produtos = await fetchJSON(`${API_URL}/admin/products-sector_id?sector_id=${sectorId}`);
-      renderProductsInModal(produtos);
+      const products = await fetchJSON(`${API_URL}/admin/products-sector_id?sector_id=${sectorId}`);
+      renderProductsInModal(products);
       productsModal.style.display = 'block';
     } catch (e) {
-      productsListContainer.innerHTML = '<p style="color:red;">Não foi possível carregar os produtos.</p>';
+      productsListContainer.innerHTML = '<p style="color:red;">Could not load products.</p>';
     }
   };
 
-  function renderProductsInModal(produtos) {
+  function renderProductsInModal(products) {
     productsListContainer.innerHTML = '';
-    if (!produtos || produtos.length === 0) {
-      productsListContainer.innerHTML = '<p>Nenhum produto cadastrado para este setor.</p>';
+    if (!products || products.length === 0) {
+      productsListContainer.innerHTML = '<p>No products registered for this sector.</p>';
       return;
     }
 
-    const rows = produtos.map(p => `
+    const rows = products.map(p => `
       <tr>
         <td>${p.id}</td>
         <td>${p.name}</td>
         <td>${p.unit}</td>
         <td>
           <div class="action-buttons-cell">
-            <button class="btn-action btn-editar" onclick="window.editProduct(${p.id}, '${p.name}', '${p.unit}')">Editar</button>
-            <button class="btn-action btn-excluir" onclick="window.confirmDelete('product', ${p.id})">Excluir</button>
+            <button class="btn-action btn-editar" onclick="window.editProduct(${p.id}, '${p.name}', '${p.unit}')">Edit</button>
+            <button class="btn-action btn-excluir" onclick="window.confirmDelete('product', ${p.id})">Delete</button>
           </div>
         </td>
       </tr>
@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     productsListContainer.innerHTML = `
       <table class="admin-list-table">
-        <thead><tr><th>ID</th><th>Nome</th><th>Unidade</th><th>Ações</th></tr></thead>
+        <thead><tr><th>ID</th><th>Name</th><th>Unit</th><th>Actions</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     `;
@@ -133,14 +133,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- Delete Confirmation ----------
   window.confirmDelete = (type, id) => {
-    const item = type === 'sector' ? 'setor' : 'produto';
-    showConfirmModal(`Tem certeza que deseja excluir este ${item}?`, async () => {
+    const item = type === 'sector' ? 'sector' : 'product';
+    showConfirmModal(`Are you sure you want to delete this ${item}?`, async () => {
       try {
         const url = type === 'sector'
           ? `${API_URL}/sectors/${id}`
           : `${API_URL}/admin/products/${id}`;
         await fetchJSON(url, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
-        showSuccessModal(`${item} excluído com sucesso!`, () => {
+        showSuccessModal(`${item.charAt(0).toUpperCase() + item.slice(1)} deleted successfully!`, () => {
           if (type === 'sector') {
             loadSectors();
             if (currentSectorId === id) {
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
       } catch (e) {
-        showSuccessModal(`Erro ao excluir ${item}: ${e.message}`);
+        showSuccessModal(`Error deleting ${item}: ${e.message}`);
       }
     });
   };
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   saveSectorEditBtn.addEventListener('click', async () => {
     const name = editSectorNameInput.value.trim();
-    if (!name) { showSuccessModal('Nome do setor é obrigatório'); return; }
+    if (!name) { showSuccessModal('Sector name is required'); return; }
 
     try {
       await fetchJSON(`${API_URL}/sectors/${currentSectorId}`, {
@@ -175,12 +175,12 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ name })
       });
       editSectorModal.style.display = 'none';
-      showSuccessModal('Setor salvo com sucesso!', () => {
+      showSuccessModal('Sector saved successfully!', () => {
         loadSectors();
         selectedSectorName.textContent = name;
       });
     } catch (e) {
-      showSuccessModal('Erro ao salvar setor: ' + e.message);
+      showSuccessModal('Error saving sector: ' + e.message);
     }
   });
 
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
       unit: editProductUnitInput.value.trim()
     };
     if (!data.name || !data.unit) {
-      showSuccessModal('Nome e unidade do produto são obrigatórios');
+      showSuccessModal('Product name and unit are required');
       return;
     }
 
@@ -209,11 +209,11 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ ...data, sector_id: currentSectorId })
       });
       editModal.style.display = 'none';
-      showSuccessModal('Produto salvo com sucesso!', () => {
+      showSuccessModal('Product saved successfully!', () => {
         showProductsModal(currentSectorId, selectedSectorName.textContent);
       });
     } catch (e) {
-      showSuccessModal('Erro ao salvar produto: ' + e.message);
+      showSuccessModal('Error saving product: ' + e.message);
     }
   });
 

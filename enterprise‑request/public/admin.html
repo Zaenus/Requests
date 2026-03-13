@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Admin</title>
+    <title>Admin Panel</title>
     <link rel="stylesheet" href="./css/admin.css">
 </head>
 <body>
@@ -15,10 +15,10 @@
             </div>
             <nav>
                 <ul>
-                    <a href="/deposito">
+                    <a href="/deposit">
                         <li class="nav-item">
                             <ion-icon name="document-text-outline"></ion-icon>
-                            <span>Requisições</span>
+                            <span>Requests</span>
                         </li>
                     </a>
                     <a href="/adm">
@@ -27,16 +27,16 @@
                             <span>Admin</span>
                         </li>
                     </a>
-                    <a href="/setores">
+                    <a href="/sectors">
                         <li class="nav-item">
                             <ion-icon name="cube-outline"></ion-icon>
-                            <span>Setores</span>
+                            <span>Sectors</span>
                         </li>
                     </a>
-                    <a href="/relatorios">
+                    <a href="/reports">
                         <li class="nav-item">
                             <ion-icon name="bar-chart-outline"></ion-icon>
-                            <span>Relatórios</span>
+                            <span>Reports</span>
                         </li>
                     </a>
                 </ul>
@@ -46,7 +46,7 @@
         <div class="main-content">
             <div class="top-bar">
                 <div class="search-box">
-                    <input type="text" placeholder="Pesquisar...">
+                    <input type="text" placeholder="Search...">
                     <button><ion-icon name="search-outline"></ion-icon></button>
                 </div>
                 <div class="user-profile">
@@ -55,43 +55,43 @@
                 </div>
             </div>
 
-            <div id="requisicoes-content" class="content-section" style="display: none;">
-                <h2>Requisições</h2>
+            <div id="requests-content" class="content-section" style="display: none;">
+                <h2>Requests</h2>
             </div>
             
             <div id="admin-content" class="content-section" style="display: block;">
-                <h2>Cadastro de Setores e Produtos</h2>
+                <h2>Sector and Product Registration</h2>
                 <div class="admin-grid">
                     <div class="admin-section">
-                        <h3>Cadastrar Setor</h3>
+                        <h3>Add Sector</h3>
                         <div class="input-group">
-                            <label for="sector-name">Nome do Setor:</label>
+                            <label for="sector-name">Sector Name:</label>
                             <input type="text" id="sector-name">
                         </div>
-                        <button class="btn btn-primary" id="save-sector-btn">Salvar</button>
+                        <button class="btn btn-primary" id="save-sector-btn">Save</button>
                     </div>
                     
                     <div class="admin-section">
-                        <h3>Cadastrar Produtos</h3>
+                        <h3>Add Products</h3>
                         <div class="input-group">
-                            <label for="product-sector-select">Setor:</label>
+                            <label for="product-sector-select">Sector:</label>
                             <select id="product-sector-select">
-                                <option value="">Selecione um setor...</option>
+                                <option value="">Select a sector...</option>
                             </select>
                         </div>
                         <div class="input-group">
-                            <label for="product-category">Categoria:</label>
+                            <label for="product-category">Category:</label>
                             <input type="text" id="product-category">
                         </div>
                         <div class="input-group">
-                            <label for="product-name">Nome do Produto:</label>
+                            <label for="product-name">Product Name:</label>
                             <input type="text" id="product-name">
                         </div>
                         <div class="input-group">
-                            <label for="product-unit">Unidade:</label>
+                            <label for="product-unit">Unit:</label>
                             <input type="text" id="product-unit">
                         </div>
-                        <button class="btn btn-primary" id="save-product-btn">Salvar</button>
+                        <button class="btn btn-primary" id="save-product-btn">Save</button>
                     </div>
                 </div>
             </div>

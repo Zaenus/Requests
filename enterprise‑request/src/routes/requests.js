@@ -4,7 +4,7 @@ const db = require('../db');
 
 // POST /api/requests (single product request)
 router.post('/', async (req, res) => {
-  const { sector_id, product_id, quantity, turno, funcionario, responsavel, observacoes } = req.body;
+  const { sector_id, product_id, quantity, shift, employee, supervisor, notes } = req.body;
   if (!sector_id || !product_id || !quantity) {
     return res.status(400).json({ error: 'sector_id, product_id and quantity required' });
   }
@@ -23,9 +23,9 @@ router.post('/', async (req, res) => {
     await db.runAsync('BEGIN TRANSACTION', []);
     try {
       const { lastID: request_id } = await db.runAsync(
-        `INSERT INTO requests (sector_id, turno, funcionario, responsavel, observacoes)
+        `INSERT INTO requests (sector_id, shift, employee, supervisor, notes)
          VALUES (?, ?, ?, ?, ?)`,
-        [sector_id, turno || null, funcionario || null, responsavel || null, observacoes || null]
+        [sector_id, shift || null, employee || null, supervisor || null, notes || null]
       );
       await db.runAsync(
         'INSERT INTO request_items (request_id, product_id, quantity) VALUES (?, ?, ?)',
@@ -42,30 +42,30 @@ router.post('/', async (req, res) => {
   }
 });
 
-// POST /api/requests/enviar_requisicao (multi-product request)
-router.post('/enviar_requisicao', async (req, res) => {
-  const { setor, turno, data, hora, funcionario, responsavel, produtos, observacoes } = req.body;
+// POST /api/requests/submit (multi-product request)
+router.post('/submit', async (req, res) => {
+  const { sector, shift, date, time, employee, supervisor, products, notes } = req.body;
 
   // Validate required fields
-  if (!setor || !produtos || produtos.length === 0) {
-    return res.status(400).json({ error: 'setor and produtos are required' });
+  if (!sector || !products || products.length === 0) {
+    return res.status(400).json({ error: 'sector and products are required' });
   }
 
-  if (!data || !hora) {
-    return res.status(400).json({ error: 'data e hora são obrigatórios' });
+  if (!date || !time) {
+    return res.status(400).json({ error: 'date and time are required' });
   }
 
   // Validate that each product has required fields
-  for (const p of produtos) {
-    if (!p.id || !p.quantidade) {
-      return res.status(400).json({ error: 'Each product must have id and quantidade' });
+  for (const p of products) {
+    if (!p.id || !p.quantity) {
+      return res.status(400).json({ error: 'Each product must have id and quantity' });
     }
   }
 
-  const created_at = `${data} ${hora}:00`;
+  const created_at = `${date} ${time}:00`;
 
   try {
-    const sectorRow = await db.getAsync('SELECT id FROM sectors WHERE name = ?', [setor]);
+    const sectorRow = await db.getAsync('SELECT id FROM sectors WHERE name = ?', [sector]);
     if (!sectorRow) return res.status(404).json({ error: 'Sector not found' });
 
     const sector_id = sectorRow.id;
@@ -73,23 +73,23 @@ router.post('/enviar_requisicao', async (req, res) => {
     await db.runAsync('BEGIN TRANSACTION', []);
     try {
       const { lastID: request_id } = await db.runAsync(
-        `INSERT INTO requests (sector_id, turno, funcionario, responsavel, observacoes, status, created_at)
+        `INSERT INTO requests (sector_id, shift, employee, supervisor, notes, status, created_at)
          VALUES (?, ?, ?, ?, ?, 'pending', ?)`,
-        [sector_id, turno || null, funcionario || null, responsavel || null, observacoes || null, created_at]
+        [sector_id, shift || null, employee || null, supervisor || null, notes || null, created_at]
       );
 
-      for (const p of produtos) {
+      for (const p of products) {
         const productRow = await db.getAsync(
           'SELECT id FROM products WHERE id = ? AND sector_id = ?',
           [p.id, sector_id]
         );
         if (!productRow) {
           await db.runAsync('ROLLBACK', []);
-          return res.status(400).json({ error: `Product ID ${p.id} not found in sector ${setor}` });
+          return res.status(400).json({ error: `Product ID ${p.id} not found in sector ${sector}` });
         }
         await db.runAsync(
           'INSERT INTO request_items (request_id, product_id, quantity) VALUES (?, ?, ?)',
-          [request_id, p.id, p.quantidade]
+          [request_id, p.id, p.quantity]
         );
       }
 

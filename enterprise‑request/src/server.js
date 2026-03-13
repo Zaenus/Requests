@@ -27,11 +27,11 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/images', express.static(path.join(__dirname, '..', 'public', 'images')));
 
 // Unprotected static page routes
-app.get('/deposito',    (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'deposit.html')));
+app.get('/deposit',       (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'deposit.html')));
 app.get('/adm',         (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'admin.html')));
-app.get('/autorizacao', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'autorizacao.html')));
-app.get('/setores',     (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'products.html')));
-app.get('/relatorios',  (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'reports.html')));
+app.get('/authorization', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'authorization.html')));
+app.get('/sectors',      (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'products.html')));
+app.get('/reports',      (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'reports.html')));
 
 // API routes — authentication & health are always public
 app.use('/api/authentication', require('./routes/authentication'));

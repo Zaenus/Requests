@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatórios - Requisições Aprovadas</title>
+    <title>Reports - Approved Requests</title>
     <link rel="stylesheet" href="./css/reports.css">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -18,20 +18,20 @@
         <div class="logo-graal-sidebar"><img src="./images/logo_preto.png" alt="Graal"></div>
         <nav>
             <ul>
-                <a href="/deposito">
-                    <li class="nav-item"><ion-icon name="document-text-outline"></ion-icon><span>Requisições</span>
+                <a href="/deposit">
+                    <li class="nav-item"><ion-icon name="document-text-outline"></ion-icon><span>Requests</span>
                     </li>
                 </a>
                 <a href="/adm">
                     <li class="nav-item"><ion-icon name="settings-outline"></ion-icon><span>Admin</span>
                     </li>
                 </a>
-                <a href="/setores">
-                    <li class="nav-item"><ion-icon name="cube-outline"></ion-icon><span>Setores</span>
+                <a href="/sectors">
+                    <li class="nav-item"><ion-icon name="cube-outline"></ion-icon><span>Sectors</span>
                     </li>
                 </a>
-                <a href="/relatorios">
-                    <li class="nav-item selected"><ion-icon name="bar-chart-outline"></ion-icon><span>Relatórios</span>
+                <a href="/reports">
+                    <li class="nav-item selected"><ion-icon name="bar-chart-outline"></ion-icon><span>Reports</span>
                     </li>
                 </a>
             </ul>
@@ -41,37 +41,37 @@
     <!-- ==== MAIN CONTENT ==== -->
     <div class="main-content">
         <div class="top-bar">
-            <div class="search-box"><input type="text" placeholder="Pesquisar..."><button><ion-icon name="search-outline"></ion-icon></button></div>
-            <div class="user-profile"><span>Depósito</span><ion-icon name="chevron-down-outline"></ion-icon></div>
+            <div class="search-box"><input type="text" placeholder="Search..."><button><ion-icon name="search-outline"></ion-icon></button></div>
+            <div class="user-profile"><span>Deposit</span><ion-icon name="chevron-down-outline"></ion-icon></div>
         </div>
 
         <div class="content-section">
-            <h2>Relatórios - Requisições Aprovadas</h2>
+            <h2>Reports - Approved Requests</h2>
 
         <!-- ==== FILTER SECTION ==== -->
         <div class="admin-section">
             <div class="filter-grid">
                 <div class="input-group">
-                    <label>Setor</label>
+                    <label>Sector</label>
                     <select id="filter-sector"></select>
                 </div>
                 <div class="input-group">
-                    <label>Produto</label>
-                    <input type="text" id="filter-product" placeholder="Pesquisar por nome...">
+                    <label>Product</label>
+                    <input type="text" id="filter-product" placeholder="Search by name...">
                 </div>
                 <div class="input-group">
-                    <label>Data Inicial</label>
+                    <label>Start Date</label>
                     <input type="date" id="filter-start">
                 </div>
                 <div class="input-group">
-                    <label>Data Final</label>
+                    <label>End Date</label>
                     <input type="date" id="filter-end">
                 </div>
             </div>
             <div class="filter-actions">
-                <button id="btn-filter" class="btn btn-primary">Aplicar</button>
+                <button id="btn-filter" class="btn btn-primary">Apply</button>
                 <button id="btn-export" class="btn btn-primary" style="background:#28a745;">
-                    <ion-icon name="download-outline"></ion-icon> Exportar CSV
+                    <ion-icon name="download-outline"></ion-icon> Export CSV
                 </button>
                 <button id="btn-export-pdf" class="btn btn-primary" style="background:#dc3545;">
                     <ion-icon name="document-outline"></ion-icon> PDF
@@ -85,10 +85,10 @@
                     <thead>
                         <tr>
                             <th>Req. ID</th>
-                            <th>Setor</th>
-                            <th>Data/Hora</th>
-                            <th>Produto</th>
-                            <th>Quantidade</th>
+                            <th>Sector</th>
+                            <th>Date/Time</th>
+                            <th>Product</th>
+                            <th>Quantity</th>
                         </tr>
                     </thead>
                     <tbody id="report-table-body"></tbody>
@@ -99,7 +99,7 @@
             <div class="admin-section" style="margin-top: 2rem;">
                 <h3 style="cursor:pointer; display:flex; align-items:center; gap:8px;" onclick="toggleSummary()">
                     <ion-icon name="chevron-down-outline" id="summary-toggle-icon"></ion-icon>
-                    Resumo Mensal de Uso por Produto
+                    Monthly Usage Summary by Product
                 </h3>
                 <div id="monthly-summary" style="display:none;">
 
@@ -118,14 +118,14 @@
 
                     <!-- Drill-down Details -->
                     <div id="daily-details" class="admin-section" style="margin-top:1.5rem; display:none;">
-                        <h4>Uso Diário: <span id="detail-product"></span> em <span id="detail-month"></span></h4>
+                        <h4>Daily Usage: <span id="detail-product"></span> in <span id="detail-month"></span></h4>
                         <div class="requisition-table-container">
                             <table class="requisition-table">
-                                <thead><tr><th>Data</th><th>Req. ID</th><th>Qtd</th></tr></thead>
+                                <thead><tr><th>Date</th><th>Req. ID</th><th>Qty</th></tr></thead>
                                 <tbody id="detail-items-body"></tbody>
                             </table>
                         </div>
-                        <button class="btn btn-primary" onclick="closeDetails()" style="margin-top:1rem;">Fechar</button>
+                        <button class="btn btn-primary" onclick="closeDetails()" style="margin-top:1rem;">Close</button>
                     </div>
                 </div>
             </div>
@@ -133,17 +133,17 @@
             <div class="admin-section" style="margin-top: 2rem;">
                 <h3 style="cursor:pointer; display:flex; align-items:center; gap:8px;" onclick="toggleProductBySector()">
                     <ion-icon name="chevron-down-outline" id="product-sector-toggle-icon"></ion-icon>
-                    Uso do Produto por Setor
+                    Product Usage by Sector
                 </h3>
                 <div id="product-sector-panel" style="display:none;">
                     <div style="display:flex; gap:1rem; align-items:flex-end; margin-bottom:1rem; flex-wrap:wrap;">
                         <div class="input-group" style="margin:0; flex:1; min-width:200px;">
-                            <label>Produto</label>
+                            <label>Product</label>
                             <select id="product-sector-select">
-                                <option value="">Selecione um produto...</option>
+                                <option value="">Select a product...</option>
                             </select>
                         </div>
-                        <button class="btn btn-primary" onclick="loadProductBySector()" style="width:auto; height:fit-content;">Ver</button>
+                        <button class="btn btn-primary" onclick="loadProductBySector()" style="width:auto; height:fit-content;">View</button>
                     </div>
                     <div id="product-sector-chart-container" style="display:none;">
                         <div class="chart-container" style="height:300px; margin:1rem 0;">
@@ -151,13 +151,13 @@
                         </div>
                         <div class="requisition-table-container">
                             <table class="requisition-table">
-                                <thead><tr><th>Setor</th><th>Total</th></tr></thead>
+                                <thead><tr><th>Sector</th><th>Total</th></tr></thead>
                                 <tbody id="product-sector-body"></tbody>
                             </table>
                         </div>
                     </div>
                     <div id="product-sector-empty" style="display:none; text-align:center; color:#666; padding:1rem;">
-                        Nenhum dado encontrado para este produto.
+                        No data found for this product.
                     </div>
                 </div>
             </div>

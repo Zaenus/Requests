@@ -23,37 +23,37 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ---------- Populate Sector Select ----------
-  function populateProductSectorSelect(setores) {
+  function populateProductSectorSelect(sectors) {
     const select = document.getElementById('product-sector-select');
     if (!select) return;
-    select.innerHTML = '<option value="">Selecione um setor...</option>' +
-      setores.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    select.innerHTML = '<option value="">Select a sector...</option>' +
+      sectors.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
   }
 
   // ---------- Load Sectors ----------
   async function loadSectors() {
-    const setores = await fetchJSON(`${API_URL}/sectors`);
+    const sectors = await fetchJSON(`${API_URL}/sectors`);
     const container = document.getElementById('sectors-list');
-    if (container) renderSectors(setores, container);
-    populateProductSectorSelect(setores);
+    if (container) renderSectors(sectors, container);
+    populateProductSectorSelect(sectors);
   }
 
   // ---------- Render Sectors (used only on admin page) ----------
-  function renderSectors(setores, container) {
+  function renderSectors(sectors, container) {
     container.innerHTML = '';
-    if (!setores || setores.length === 0) {
-      container.innerHTML = '<p>Nenhum setor cadastrado.</p>';
+    if (!sectors || sectors.length === 0) {
+      container.innerHTML = '<p>No sectors registered.</p>';
       return;
     }
 
-    const rows = setores.map(s => `
+    const rows = sectors.map(s => `
       <tr>
         <td>${s.id}</td>
         <td>${s.name}</td>
         <td>
           <div class="action-buttons-cell">
-            <button class="btn-action btn-editar" onclick="editSector(${s.id}, '${s.name}')">Editar</button>
-            <button class="btn-action btn-excluir" onclick="confirmDelete('sector', ${s.id})">Excluir</button>
+            <button class="btn-action btn-editar" onclick="editSector(${s.id}, '${s.name}')">Edit</button>
+            <button class="btn-action btn-excluir" onclick="confirmDelete('sector', ${s.id})">Delete</button>
           </div>
         </td>
       </tr>
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     container.innerHTML = `
       <table class="admin-list-table">
-        <thead><tr><th>ID</th><th>Nome</th><th>Ações</th></tr></thead>
+        <thead><tr><th>ID</th><th>Name</th><th>Actions</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     `;
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---- Create / Update Sector ----
     saveSectorBtn?.addEventListener('click', async () => {
       const name = document.getElementById('sector-name').value.trim();
-      if (!name) { showModal('Erro', 'Nome do setor é obrigatório', true); return; }
+      if (!name) { showModal('Error', 'Sector name is required', true); return; }
 
       try {
         await fetchJSON(`${API_URL}/sectors`, {
@@ -87,8 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.getElementById('sector-name').value = '';
         await loadSectors();
-        showModal('Sucesso', 'Setor cadastrado com sucesso!');
-      } catch (e) { showModal('Erro', e.message, true); }
+        showModal('Success', 'Sector registered successfully!');
+      } catch (e) { showModal('Error', e.message, true); }
     });
 
     // ---- Create / Update Product ----
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const category = document.getElementById('product-category').value.trim();
 
       if (!sector_id || !name || !unit) {
-        showModal('Erro', 'Setor, nome e unidade são obrigatórios', true);
+        showModal('Error', 'Sector, name and unit are required', true);
         return;
       }
 
@@ -115,8 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.getElementById('product-form')?.reset();
         await loadSectors();
-        showModal('Sucesso', `Produto ${id ? 'atualizado' : 'cadastrado'} com sucesso!`);
-      } catch (e) { showModal('Erro', e.message, true); }
+        showModal('Success', `Product ${id ? 'updated' : 'registered'} successfully!`);
+      } catch (e) { showModal('Error', e.message, true); }
     });
   }
 
