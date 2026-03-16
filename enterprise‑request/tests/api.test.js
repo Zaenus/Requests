@@ -10,7 +10,16 @@ process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-secret-for-jest';
 
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 const app = require('../src/app');
+
+// Generate an admin JWT directly (no DB user needed for auth header usage).
+const adminToken = () =>
+  jwt.sign({ id: 1, username: 'test-admin', role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+// Shorthand for authenticated supertest calls.
+const asAdmin = (method, url) =>
+  request(app)[method](url).set('Authorization', `Bearer ${adminToken()}`);
 
 // ─── Health & public routes ───────────────────────────────────────────────────
 
@@ -124,5 +133,101 @@ describe('GET /api/docs', () => {
     const res = await request(app).get('/api/docs/');
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toMatch(/html/);
+  });
+});
+
+// ─── Request approval reduces product quantity ────────────────────────────────
+
+describe('PUT /api/admin/requests/:id — quantity reduction on approval', () => {
+  let sectorId;
+
+  // Create a shared sector once for all tests in this suite.
+  beforeAll(async () => {
+    const res = await asAdmin('post', '/api/sectors')
+      .send({ name: `TestSector-${Date.now()}` });
+    expect(res.status).toBe(201);
+    sectorId = res.body.id;
+  });
+
+  // Helper: create a product with a given quantity and return its id.
+  const createProduct = async (name, quantity) => {
+    const res = await asAdmin('post', '/api/admin/products')
+      .send({ sector_id: sectorId, name, unit: 'pcs', quantity });
+    expect(res.status).toBe(201);
+    return res.body.id;
+  };
+
+  // Helper: submit a single-product request and return its id.
+  const createRequest = async (productId, quantity) => {
+    const res = await request(app)
+      .post('/api/requests')
+      .send({ sector_id: sectorId, product_id: productId, quantity });
+    expect(res.status).toBe(201);
+    return res.body.id;
+  };
+
+  // Helper: fetch a product's current quantity.
+  const getProductQuantity = async (productId) => {
+    const res = await asAdmin('get', '/api/admin/products');
+    expect(res.status).toBe(200);
+    const product = res.body.find(p => p.id === productId);
+    return product ? product.quantity : null;
+  };
+
+  it('reduces product quantity when request is approved', async () => {
+    const productId = await createProduct('Widget-A', 100);
+    const requestId = await createRequest(productId, 30);
+
+    const res = await asAdmin('put', `/api/admin/requests/${requestId}`)
+      .send({ status: 'approved' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(await getProductQuantity(productId)).toBe(70); // 100 - 30
+  });
+
+  it('returns 409 when product quantity is insufficient', async () => {
+    const productId = await createProduct('Rare-Item', 5);
+    const requestId = await createRequest(productId, 10); // request more than available
+
+    const res = await asAdmin('put', `/api/admin/requests/${requestId}`)
+      .send({ status: 'approved' });
+
+    expect(res.status).toBe(409);
+    expect(res.body).toHaveProperty('error');
+    // Product quantity must remain unchanged after a failed approval.
+    expect(await getProductQuantity(productId)).toBe(5);
+  });
+
+  it('does not reduce quantity again when an approved request moves to done', async () => {
+    const productId = await createProduct('Widget-B', 50);
+    const requestId = await createRequest(productId, 20);
+
+    // First approval — should reduce by 20.
+    await asAdmin('put', `/api/admin/requests/${requestId}`)
+      .send({ status: 'approved' });
+    expect(await getProductQuantity(productId)).toBe(30);
+
+    // Transition to done — must NOT reduce again.
+    const res = await asAdmin('put', `/api/admin/requests/${requestId}`)
+      .send({ status: 'done' });
+    expect(res.status).toBe(200);
+    expect(await getProductQuantity(productId)).toBe(30); // still 30, not 10
+  });
+
+  it('does not reduce quantity when the same request is approved twice', async () => {
+    const productId = await createProduct('Widget-C', 80);
+    const requestId = await createRequest(productId, 15);
+
+    // First approval.
+    await asAdmin('put', `/api/admin/requests/${requestId}`)
+      .send({ status: 'approved' });
+    expect(await getProductQuantity(productId)).toBe(65);
+
+    // Calling approve again on an already-approved request should not re-reduce.
+    const res = await asAdmin('put', `/api/admin/requests/${requestId}`)
+      .send({ status: 'approved' });
+    expect(res.status).toBe(200);
+    expect(await getProductQuantity(productId)).toBe(65); // unchanged
   });
 });
