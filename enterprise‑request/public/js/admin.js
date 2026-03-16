@@ -1,6 +1,16 @@
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const API_URL = '/api';
+
+  // Verify the current user is authenticated before rendering the admin UI.
+  // fetchJSON redirects to /login on 401/403, so no extra handling is needed here.
+  try {
+    const user = await fetchJSON(`${API_URL}/me`);
+    const display = document.getElementById('username-display');
+    if (display) display.textContent = user.username;
+  } catch {
+    return;
+  }
 
   // ---------- Simple Message Modal ----------
   function showModal(title, message, isError = false) {
