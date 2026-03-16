@@ -65,9 +65,10 @@
             <div class="content-section">
                 <h2>Product Entry</h2>
 
-                <!-- ===== ADD / EDIT FORM ===== -->
+                <!-- ===== EDIT FORM ===== -->
                 <div class="admin-section">
-                    <h3 id="form-title">Add Product</h3>
+                    <h3 id="form-title">Edit Product</h3>
+                    <p id="form-hint" class="form-hint">Select a product from the list below to edit it.</p>
                     <input type="hidden" id="product-id">
                     <div class="product-form-grid">
                         <div class="input-group">
@@ -102,8 +103,8 @@
                         </div>
                     </div>
                     <div class="form-actions">
-                        <button class="btn btn-secondary" id="clear-form-btn">Clear</button>
-                        <button class="btn btn-primary" id="save-product-btn">Save Product</button>
+                        <button class="btn btn-secondary" id="clear-form-btn">Cancel</button>
+                        <button class="btn btn-primary" id="save-product-btn" disabled>Update Product</button>
                     </div>
                 </div>
 

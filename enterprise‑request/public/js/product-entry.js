@@ -122,6 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
     return n > 0 ? n.toFixed(2) : '—';
   }
 
+  // ─── Form hint element ───────────────────────────────────────────────────────
+  const formHint = document.getElementById('form-hint');
+
   // ─── Form helpers ────────────────────────────────────────────────────────────
   function clearForm() {
     productIdInput.value  = '';
@@ -132,8 +135,10 @@ document.addEventListener('DOMContentLoaded', () => {
     inventoryInput.value  = '';
     costInput.value       = '';
     supplierInput.value   = '';
-    formTitle.textContent = 'Add Product';
-    saveBtn.textContent   = 'Save Product';
+    formTitle.textContent = 'Edit Product';
+    saveBtn.textContent   = 'Update Product';
+    saveBtn.disabled      = true;
+    if (formHint) formHint.style.display = '';
   }
 
   function loadProductForEdit(id) {
@@ -150,14 +155,21 @@ document.addEventListener('DOMContentLoaded', () => {
     supplierInput.value   = p.supplier ?? '';
     formTitle.textContent = 'Edit Product';
     saveBtn.textContent   = 'Update Product';
+    saveBtn.disabled      = false;
+    if (formHint) formHint.style.display = 'none';
 
     // Scroll to form
     document.querySelector('.content-section').scrollIntoView({ behavior: 'smooth' });
   }
 
-  // ─── Save product ────────────────────────────────────────────────────────────
+  // ─── Save product (edit only — no new products created here) ─────────────────
   saveBtn.addEventListener('click', async () => {
     const id        = productIdInput.value;
+    if (!id) {
+      showMessage('No Product Selected', 'Select a product from the list below to edit it.', true);
+      return;
+    }
+
     const sector_id = sectorSelect.value;
     const name      = nameInput.value.trim();
     const unit      = unitInput.value.trim();
@@ -171,18 +183,15 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const url    = id ? `${API_URL}/admin/products/${id}` : `${API_URL}/admin/products`;
-    const method = id ? 'PUT' : 'POST';
-
     try {
-      await fetchJSON(url, {
-        method,
+      await fetchJSON(`${API_URL}/admin/products/${id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sector_id, name, unit, quantity, inventory, cost_per_unit, supplier })
       });
       clearForm();
       await loadProducts();
-      showMessage('Success', `Product ${id ? 'updated' : 'registered'} successfully!`);
+      showMessage('Success', 'Product updated successfully!');
     } catch (e) {
       showMessage('Error', e.message, true);
     }
