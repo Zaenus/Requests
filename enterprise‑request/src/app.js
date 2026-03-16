@@ -77,11 +77,12 @@ const swaggerSpec = swaggerJsdoc({
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Unprotected static page routes
+app.get('/login',         (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'login.html')));
 app.get('/deposit',       (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'deposit.html')));
-app.get('/adm',         (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'admin.html')));
+app.get('/adm',           (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'admin.html')));
 app.get('/authorization', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'authorization.html')));
-app.get('/sectors',      (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'products.html')));
-app.get('/reports',      (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'reports.html')));
+app.get('/sectors',       (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'products.html')));
+app.get('/reports',       (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'reports.html')));
 app.get('/product-entry', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'product-entry.html')));
 
 // API routes — authentication & health are always public

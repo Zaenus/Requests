@@ -136,6 +136,16 @@ describe('GET /api/docs', () => {
   });
 });
 
+// ─── Login page ───────────────────────────────────────────────────────────────
+
+describe('GET /login', () => {
+  it('serves the login page (HTML)', async () => {
+    const res = await request(app).get('/login');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toMatch(/html/);
+  });
+});
+
 // ─── Request approval reduces product quantity ────────────────────────────────
 
 describe('PUT /api/admin/requests/:id — quantity reduction on approval', () => {
