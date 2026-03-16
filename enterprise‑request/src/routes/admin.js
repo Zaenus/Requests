@@ -368,6 +368,57 @@ router.put('/requests/:id', async (req, res) => {
   const { status } = parsed.data;
 
   try {
+    // When approving, reduce product quantities for each requested item.
+    // Only trigger when transitioning from 'pending' to 'approved' to avoid
+    // double-decrementing if the endpoint is called more than once.
+    if (status === 'approved') {
+      const current = await db.getAsync('SELECT status FROM requests WHERE id = ?', [id]);
+      if (!current) return res.status(404).json({ error: 'Not found' });
+
+      if (current.status === 'pending') {
+        const items = await db.allAsync(
+          'SELECT product_id, quantity FROM request_items WHERE request_id = ?',
+          [id]
+        );
+
+        // Verify sufficient quantity for every item before making any change.
+        for (const item of items) {
+          const product = await db.getAsync(
+            'SELECT quantity FROM products WHERE id = ?',
+            [item.product_id]
+          );
+          if (!product) {
+            return res.status(400).json({ error: `Product ID ${item.product_id} not found` });
+          }
+          if (product.quantity < item.quantity) {
+            return res.status(409).json({
+              error: `Insufficient quantity for product ID ${item.product_id}: available ${product.quantity}, requested ${item.quantity}`
+            });
+          }
+        }
+
+        await db.runAsync('BEGIN TRANSACTION', []);
+        try {
+          await db.runAsync(
+            'UPDATE requests SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [status, id]
+          );
+          for (const item of items) {
+            await db.runAsync(
+              'UPDATE products SET quantity = quantity - ? WHERE id = ?',
+              [item.quantity, item.product_id]
+            );
+          }
+          await db.runAsync('COMMIT', []);
+        } catch (err) {
+          await db.runAsync('ROLLBACK', []);
+          throw err;
+        }
+
+        return res.json({ success: true, id, status });
+      }
+    }
+
     const { changes } = await db.runAsync(
       'UPDATE requests SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
       [status, id]
