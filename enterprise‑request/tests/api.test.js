@@ -146,6 +146,47 @@ describe('GET /login', () => {
   });
 });
 
+// ─── Product CNPJ field ───────────────────────────────────────────────────────
+
+describe('POST /api/admin/products — supplier_cnpj field', () => {
+  let sectorId;
+
+  beforeAll(async () => {
+    const res = await asAdmin('post', '/api/sectors')
+      .send({ name: `CnpjSector-${Date.now()}` });
+    expect(res.status).toBe(201);
+    sectorId = res.body.id;
+  });
+
+  it('creates a product with a valid formatted CNPJ', async () => {
+    const res = await asAdmin('post', '/api/admin/products')
+      .send({ sector_id: sectorId, name: 'CNPJ-Product', unit: 'pcs', supplier: 'Acme', supplier_cnpj: '12.345.678/0001-90' });
+    expect(res.status).toBe(201);
+    expect(res.body.supplier_cnpj).toBe('12.345.678/0001-90');
+  });
+
+  it('creates a product with a 14-digit unformatted CNPJ', async () => {
+    const res = await asAdmin('post', '/api/admin/products')
+      .send({ sector_id: sectorId, name: 'CNPJ-Raw', unit: 'pcs', supplier: 'Acme', supplier_cnpj: '12345678000190' });
+    expect(res.status).toBe(201);
+    expect(res.body.supplier_cnpj).toBe('12345678000190');
+  });
+
+  it('rejects a product with an invalid CNPJ format', async () => {
+    const res = await asAdmin('post', '/api/admin/products')
+      .send({ sector_id: sectorId, name: 'Bad-CNPJ', unit: 'pcs', supplier_cnpj: 'not-a-cnpj' });
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('error');
+  });
+
+  it('creates a product without a CNPJ (defaults to empty string)', async () => {
+    const res = await asAdmin('post', '/api/admin/products')
+      .send({ sector_id: sectorId, name: 'No-CNPJ', unit: 'pcs' });
+    expect(res.status).toBe(201);
+    expect(res.body.supplier_cnpj).toBe('');
+  });
+});
+
 // ─── Request approval reduces product quantity ────────────────────────────────
 
 describe('PUT /api/admin/requests/:id — quantity reduction on approval', () => {
