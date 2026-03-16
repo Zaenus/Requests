@@ -7,11 +7,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const nameInput            = document.getElementById('product-name');
   const unitInput            = document.getElementById('product-unit');
   const quantityInput        = document.getElementById('product-quantity');
-  const inventoryInput       = document.getElementById('product-inventory');
   const costInput            = document.getElementById('product-cost');
   const supplierInput        = document.getElementById('product-supplier');
   const saveBtn              = document.getElementById('save-product-btn');
   const clearBtn             = document.getElementById('clear-form-btn');
+  const newProductBtn        = document.getElementById('new-product-btn');
   const formTitle            = document.getElementById('form-title');
 
   // ─── List elements ───────────────────────────────────────────────────────────
@@ -96,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${p.name}</td>
         <td>${p.unit}</td>
         <td>${p.quantity ?? 0}</td>
-        <td>${p.inventory ?? 0}</td>
         <td>${formatCurrency(p.cost_per_unit)}</td>
         <td>${p.supplier || '—'}</td>
         <td>
@@ -132,13 +131,27 @@ document.addEventListener('DOMContentLoaded', () => {
     nameInput.value       = '';
     unitInput.value       = '';
     quantityInput.value   = '';
-    inventoryInput.value  = '';
     costInput.value       = '';
     supplierInput.value   = '';
     formTitle.textContent = 'Edit Product';
     saveBtn.textContent   = 'Update Product';
     saveBtn.disabled      = true;
     if (formHint) formHint.style.display = '';
+  }
+
+  function enterNewProductMode() {
+    productIdInput.value  = '';
+    sectorSelect.value    = '';
+    nameInput.value       = '';
+    unitInput.value       = '';
+    quantityInput.value   = '';
+    costInput.value       = '';
+    supplierInput.value   = '';
+    formTitle.textContent = 'New Product';
+    saveBtn.textContent   = 'Create Product';
+    saveBtn.disabled      = false;
+    if (formHint) formHint.style.display = 'none';
+    sectorSelect.focus();
   }
 
   function loadProductForEdit(id) {
@@ -150,7 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
     nameInput.value       = p.name;
     unitInput.value       = p.unit;
     quantityInput.value   = p.quantity ?? 0;
-    inventoryInput.value  = p.inventory ?? 0;
     costInput.value       = p.cost_per_unit ?? 0;
     supplierInput.value   = p.supplier ?? '';
     formTitle.textContent = 'Edit Product';
@@ -162,19 +174,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.content-section').scrollIntoView({ behavior: 'smooth' });
   }
 
-  // ─── Save product (edit only — no new products created here) ─────────────────
+  // ─── New Product button ───────────────────────────────────────────────────────
+  newProductBtn.addEventListener('click', enterNewProductMode);
+
+  // ─── Save product (create or update) ─────────────────────────────────────────
   saveBtn.addEventListener('click', async () => {
     const id        = productIdInput.value;
-    if (!id) {
-      showMessage('No Product Selected', 'Select a product from the list below to edit it.', true);
-      return;
-    }
-
     const sector_id = sectorSelect.value;
     const name      = nameInput.value.trim();
     const unit      = unitInput.value.trim();
     const quantity  = quantityInput.value !== '' ? parseFloat(quantityInput.value) : 0;
-    const inventory = inventoryInput.value !== '' ? parseFloat(inventoryInput.value) : 0;
     const cost_per_unit = costInput.value !== '' ? parseFloat(costInput.value) : 0;
     const supplier  = supplierInput.value.trim();
 
@@ -184,14 +193,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      await fetchJSON(`${API_URL}/admin/products/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sector_id, name, unit, quantity, inventory, cost_per_unit, supplier })
-      });
-      clearForm();
-      await loadProducts();
-      showMessage('Success', 'Product updated successfully!');
+      if (id) {
+        // Update existing product
+        await fetchJSON(`${API_URL}/admin/products/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sector_id, name, unit, quantity, cost_per_unit, supplier })
+        });
+        clearForm();
+        await loadProducts();
+        showMessage('Success', 'Product updated successfully!');
+      } else {
+        // Create new product
+        await fetchJSON(`${API_URL}/admin/products`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sector_id, name, unit, quantity, cost_per_unit, supplier })
+        });
+        clearForm();
+        await loadProducts();
+        showMessage('Success', 'Product created successfully!');
+      }
     } catch (e) {
       showMessage('Error', e.message, true);
     }

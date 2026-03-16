@@ -83,6 +83,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (isAdminPage) {
     const saveSectorBtn = document.getElementById('save-sector-btn');
     const saveProductBtn = document.getElementById('save-product-btn');
+    const sectorSelect = document.getElementById('product-sector-select');
+    const productSelect = document.getElementById('product-select');
+    const quantityInput = document.getElementById('product-quantity');
 
     // ---- Create / Update Sector ----
     saveSectorBtn?.addEventListener('click', async () => {
@@ -101,31 +104,76 @@ document.addEventListener('DOMContentLoaded', async () => {
       } catch (e) { showModal('Error', e.message, true); }
     });
 
-    // ---- Create / Update Product ----
-    saveProductBtn?.addEventListener('click', async () => {
-      const id = document.getElementById('product-id')?.value;
-      const sector_id = document.getElementById('product-sector-select').value;
-      const name = document.getElementById('product-name').value.trim();
-      const unit = document.getElementById('product-unit').value.trim();
-      const category = document.getElementById('product-category').value.trim();
+    // ---- Load products when sector changes ----
+    sectorSelect?.addEventListener('change', async () => {
+      const sectorId = sectorSelect.value;
+      if (!productSelect) return;
 
-      if (!sector_id || !name || !unit) {
-        showModal('Error', 'Sector, name and unit are required', true);
+      if (!sectorId) {
+        productSelect.innerHTML = '<option value="">Select a sector first...</option>';
+        productSelect.disabled = true;
+        if (quantityInput) quantityInput.disabled = true;
+        if (saveProductBtn) saveProductBtn.disabled = true;
         return;
       }
 
-      const url = id ? `${API_URL}/admin/products/${id}` : `${API_URL}/admin/products`;
-      const method = id ? 'PUT' : 'POST';
+      try {
+        const products = await fetchJSON(`${API_URL}/admin/products-sector_id?sector_id=${sectorId}`);
+        if (products.length === 0) {
+          productSelect.innerHTML = '<option value="">No products in this sector</option>';
+          productSelect.disabled = true;
+        } else {
+          productSelect.innerHTML = '<option value="">Select a product...</option>' +
+            products.map(p => `<option value="${p.id}" data-quantity="${p.quantity ?? 0}">${p.name} (${p.unit}) — Stock: ${p.quantity ?? 0}</option>`).join('');
+          productSelect.disabled = false;
+        }
+        if (quantityInput) { quantityInput.value = ''; quantityInput.disabled = true; }
+        if (saveProductBtn) saveProductBtn.disabled = true;
+      } catch (e) {
+        showModal('Error', e.message, true);
+      }
+    });
+
+    // ---- Enable quantity input when product is selected ----
+    productSelect?.addEventListener('change', () => {
+      const hasProduct = !!productSelect.value;
+      if (quantityInput) { quantityInput.disabled = !hasProduct; if (!hasProduct) quantityInput.value = ''; }
+      if (saveProductBtn) saveProductBtn.disabled = !hasProduct;
+    });
+
+    // ---- Add quantity to selected product ----
+    saveProductBtn?.addEventListener('click', async () => {
+      const productId = productSelect?.value;
+      const addQty = parseFloat(quantityInput?.value || '0');
+
+      if (!productId) { showModal('Error', 'Please select a product', true); return; }
+      if (isNaN(addQty) || addQty <= 0) { showModal('Error', 'Please enter a valid quantity greater than 0', true); return; }
 
       try {
-        await fetchJSON(url, {
-          method,
+        // Get current product data
+        const allProducts = await fetchJSON(`${API_URL}/admin/products`);
+        const product = allProducts.find(p => String(p.id) === String(productId));
+        if (!product) { showModal('Error', 'Product not found', true); return; }
+
+        const newQuantity = (product.quantity ?? 0) + addQty;
+
+        await fetchJSON(`${API_URL}/admin/products/${productId}`, {
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sector_id, name, unit, category })
+          body: JSON.stringify({
+            sector_id: product.sector_id,
+            name: product.name,
+            unit: product.unit,
+            quantity: newQuantity,
+            cost_per_unit: product.cost_per_unit ?? 0,
+            supplier: product.supplier ?? ''
+          })
         });
-        document.getElementById('product-form')?.reset();
-        await loadSectors();
-        showModal('Success', `Product ${id ? 'updated' : 'registered'} successfully!`);
+
+        // Refresh the product dropdown to reflect updated stock
+        if (sectorSelect.value) sectorSelect.dispatchEvent(new Event('change'));
+        if (quantityInput) quantityInput.value = '';
+        showModal('Success', `Added ${addQty} to ${product.name}. New stock: ${newQuantity}.`);
       } catch (e) { showModal('Error', e.message, true); }
     });
   }
