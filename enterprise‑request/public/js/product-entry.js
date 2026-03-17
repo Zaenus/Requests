@@ -6,10 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const sectorSelect         = document.getElementById('product-sector-select');
   const nameInput            = document.getElementById('product-name');
   const unitInput            = document.getElementById('product-unit');
-  const quantityInput        = document.getElementById('product-quantity');
-  const costInput            = document.getElementById('product-cost');
-  const supplierInput        = document.getElementById('product-supplier');
-  const supplierCnpjInput    = document.getElementById('product-supplier-cnpj');
   const saveBtn              = document.getElementById('save-product-btn');
   const clearBtn             = document.getElementById('clear-form-btn');
   const newProductBtn        = document.getElementById('new-product-btn');
@@ -96,10 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${p.sector_name || ''}</td>
         <td>${p.name}</td>
         <td>${p.unit}</td>
-        <td>${p.quantity ?? 0}</td>
-        <td>${formatCurrency(p.cost_per_unit)}</td>
-        <td>${p.supplier || '—'}</td>
-        <td>${p.supplier_cnpj || '—'}</td>
         <td>
           <div class="action-buttons-cell">
             <button class="btn-action btn-editar" data-id="${p.id}">Edit</button>
@@ -118,11 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function formatCurrency(val) {
-    const n = parseFloat(val) || 0;
-    return n > 0 ? n.toFixed(2) : '—';
-  }
-
   // ─── Form hint element ───────────────────────────────────────────────────────
   const formHint = document.getElementById('form-hint');
 
@@ -132,10 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
     sectorSelect.value    = '';
     nameInput.value       = '';
     unitInput.value       = '';
-    quantityInput.value   = '';
-    costInput.value       = '';
-    supplierInput.value   = '';
-    supplierCnpjInput.value = '';
     formTitle.textContent = 'Edit Product';
     saveBtn.textContent   = 'Update Product';
     saveBtn.disabled      = true;
@@ -147,10 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
     sectorSelect.value    = '';
     nameInput.value       = '';
     unitInput.value       = '';
-    quantityInput.value   = '';
-    costInput.value       = '';
-    supplierInput.value   = '';
-    supplierCnpjInput.value = '';
     formTitle.textContent = 'New Product';
     saveBtn.textContent   = 'Create Product';
     saveBtn.disabled      = false;
@@ -166,10 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
     sectorSelect.value    = p.sector_id;
     nameInput.value       = p.name;
     unitInput.value       = p.unit;
-    quantityInput.value   = p.quantity ?? 0;
-    costInput.value       = p.cost_per_unit ?? 0;
-    supplierInput.value   = p.supplier ?? '';
-    supplierCnpjInput.value = p.supplier_cnpj ?? '';
     formTitle.textContent = 'Edit Product';
     saveBtn.textContent   = 'Update Product';
     saveBtn.disabled      = false;
@@ -188,10 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sector_id = sectorSelect.value;
     const name      = nameInput.value.trim();
     const unit      = unitInput.value.trim();
-    const quantity  = quantityInput.value !== '' ? parseFloat(quantityInput.value) : 0;
-    const cost_per_unit = costInput.value !== '' ? parseFloat(costInput.value) : 0;
-    const supplier  = supplierInput.value.trim();
-    const supplier_cnpj = supplierCnpjInput.value.trim();
 
     if (!sector_id || !name || !unit) {
       showMessage('Validation Error', 'Sector, name and unit are required.', true);
@@ -200,11 +171,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       if (id) {
-        // Update existing product
+        // Update existing product — preserve existing stock/supplier fields
+        const existing = allProducts.find(p => String(p.id) === String(id));
         await fetchJSON(`${API_URL}/admin/products/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sector_id, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj })
+          body: JSON.stringify({
+            sector_id,
+            name,
+            unit,
+            quantity: existing ? (existing.quantity ?? 0) : 0,
+            cost_per_unit: existing ? (existing.cost_per_unit ?? 0) : 0,
+            supplier: existing ? (existing.supplier ?? '') : '',
+            supplier_cnpj: existing ? (existing.supplier_cnpj ?? '') : ''
+          })
         });
         clearForm();
         await loadProducts();
@@ -214,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await fetchJSON(`${API_URL}/admin/products`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sector_id, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj })
+          body: JSON.stringify({ sector_id, name, unit })
         });
         clearForm();
         await loadProducts();
