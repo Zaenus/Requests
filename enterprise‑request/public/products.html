@@ -64,60 +64,53 @@
 
             <div id="products-content" class="content-section" style="display: block;">
                 <h2>Sector Management</h2>
-                <div class="admin-grid">
-                    <div class="admin-section" style="width: 100%;">
-                        <h3>Registered Sectors</h3>
-                        <div id="sectors-list">
-                            </div>
+
+                <!-- ===== CREATE SECTOR FORM ===== -->
+                <div class="admin-section" style="margin-bottom: 2rem;">
+                    <h3>New Sector</h3>
+                    <div class="create-sector-row">
+                        <div class="input-group" style="flex: 1; margin-bottom: 0;">
+                            <label for="new-sector-name">Sector Name <span class="required">*</span></label>
+                            <input type="text" id="new-sector-name" placeholder="e.g. IT Department">
+                        </div>
+                        <button class="btn btn-primary" id="create-sector-btn">Create Sector</button>
                     </div>
                 </div>
+
+                <!-- ===== SECTORS LIST ===== -->
+                <div class="admin-section" style="width: 100%;">
+                    <h3>Registered Sectors</h3>
+                    <div id="sectors-list"></div>
+                </div>
             </div>
         </div>
     </div>
 
-        <div id="products-modal" class="modal">
+    <!-- ===== PRODUCTS VIEW MODAL (read-only) ===== -->
+    <div id="products-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
-            <h3 id="modal-title">Sector Products <span id="selected-sector-name"></span></h3>
-            <div id="products-list">
-                </div>
+            <h3 id="modal-title">Sector Products: <span id="selected-sector-name"></span></h3>
+            <div id="products-list"></div>
         </div>
     </div>
-    
-    <div id="edit-modal" class="modal">
+
+    <!-- ===== EDIT SECTOR MODAL ===== -->
+    <div id="edit-sector-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
-            <h3>Edit Product</h3>
+            <h3>Edit Sector</h3>
             <div class="edit-form-container">
                 <div class="input-group">
-                    <label for="edit-product-name">Product Name:</label>
-                    <input type="text" id="edit-product-name">
+                    <label for="edit-sector-name">Sector Name:</label>
+                    <input type="text" id="edit-sector-name">
                 </div>
-                <div class="input-group">
-                    <label for="edit-product-unit">Unit:</label>
-                    <input type="text" id="edit-product-unit">
-                </div>
-                <div class="input-group">
-                    <label for="edit-product-quantity">Quantity:</label>
-                    <input type="number" id="edit-product-quantity" min="0" step="0.01">
-                </div>
-                <div class="input-group">
-                    <label for="edit-product-inventory">Inventory:</label>
-                    <input type="number" id="edit-product-inventory" min="0" step="0.01">
-                </div>
-                <div class="input-group">
-                    <label for="edit-product-cost">Cost per Unit:</label>
-                    <input type="number" id="edit-product-cost" min="0" step="0.01">
-                </div>
-                <div class="input-group">
-                    <label for="edit-product-supplier">Supplier:</label>
-                    <input type="text" id="edit-product-supplier">
-                </div>
-                <button class="btn btn-primary" id="save-edit-btn">Save Changes</button>
+                <button class="btn btn-primary" id="save-sector-edit-btn">Save Changes</button>
             </div>
         </div>
     </div>
 
+    <!-- ===== CONFIRM MODAL ===== -->
     <div id="confirm-modal" class="modal">
         <div class="modal-content">
             <h3>Confirmation</h3>
@@ -128,29 +121,18 @@
             </div>
         </div>
     </div>
-<div id="success-modal" class="modal">
-    <div class="modal-content">
-        <h3>Success!</h3>
-        <p id="success-message"></p>
-        <div class="btn-group" style="justify-content: flex-end;">
-            <button class="btn btn-primary" id="success-ok-btn">OK</button>
-        </div>
-    </div>
-</div>
-<div id="edit-sector-modal" class="modal">
-    <div class="modal-content">
-        <span class="close-btn">&times;</span>
-        <h3>Edit Sector</h3>
-        <div class="edit-form-container">
-            <div class="input-group">
-                <label for="edit-sector-name">Sector Name:</label>
-                <input type="text" id="edit-sector-name">
+
+    <!-- ===== SUCCESS MODAL ===== -->
+    <div id="success-modal" class="modal">
+        <div class="modal-content">
+            <h3>Success!</h3>
+            <p id="success-message"></p>
+            <div class="btn-group" style="justify-content: flex-end;">
+                <button class="btn btn-primary" id="success-ok-btn">OK</button>
             </div>
-            <button class="btn btn-primary" id="save-sector-edit-btn">Save Changes</button>
         </div>
     </div>
-</div>
-    
+
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
     <script src="./js/api.js"></script>

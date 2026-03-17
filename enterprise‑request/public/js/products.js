@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', () => {
   const API_URL = '/api';
 
@@ -6,24 +5,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const sectorsListContainer = document.getElementById('sectors-list');
   const productsListContainer = document.getElementById('products-list');
   const productsModal = document.getElementById('products-modal');
-  const editModal = document.getElementById('edit-modal');
   const editSectorModal = document.getElementById('edit-sector-modal');
   const confirmModal = document.getElementById('confirm-modal');
   const successModal = document.getElementById('success-modal');
   const selectedSectorName = document.getElementById('selected-sector-name');
   const confirmMessage = document.getElementById('confirm-message');
   const successMessage = document.getElementById('success-message');
-  const editProductNameInput = document.getElementById('edit-product-name');
-  const editProductUnitInput = document.getElementById('edit-product-unit');
   const editSectorNameInput = document.getElementById('edit-sector-name');
-  const saveEditBtn = document.getElementById('save-edit-btn');
   const saveSectorEditBtn = document.getElementById('save-sector-edit-btn');
   const confirmActionBtn = document.getElementById('confirm-action-btn');
   const cancelActionBtn = document.getElementById('cancel-action-btn');
   const successOkBtn = document.getElementById('success-ok-btn');
+  const newSectorNameInput = document.getElementById('new-sector-name');
+  const createSectorBtn = document.getElementById('create-sector-btn');
 
   let currentSectorId = null;
-  let currentProductId = null;
 
   // ---------- Modals ----------
   function showSuccessModal(message, callback) {
@@ -48,9 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.close-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       productsModal.style.display = 'none';
-      editModal.style.display = 'none';
       editSectorModal.style.display = 'none';
-      confirmModal.style.display = 'none';
     });
   });
 
@@ -65,11 +59,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const rows = sectors.map(s => `
       <tr>
         <td>${s.id}</td>
-        <td><a href="#" onclick="window.showProductsModal(${s.id}, '${s.name}')">${s.name}</a></td>
+        <td><a href="#" onclick="window.showProductsModal(${s.id}, '${s.name.replace(/'/g, "\\'")}')">${s.name}</a></td>
         <td>
           <div class="action-buttons-cell">
-            <button class="btn-action btn-editar" onclick="window.editSector(${s.id}, '${s.name}')">Edit</button>
-            <button class="btn-action btn-excluir" onclick="window.confirmDelete('sector', ${s.id})">Delete</button>
+            <button class="btn-action btn-editar" onclick="window.editSector(${s.id}, '${s.name.replace(/'/g, "\\'")}')">Edit</button>
+            <button class="btn-action btn-excluir" onclick="window.confirmDelete(${s.id})">Delete</button>
           </div>
         </td>
       </tr>
@@ -89,7 +83,29 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSectors(sectors);
   }
 
-  // ---------- Products Modal ----------
+  // ---------- Create Sector ----------
+  createSectorBtn.addEventListener('click', async () => {
+    const name = newSectorNameInput.value.trim();
+    if (!name) { showSuccessModal('Sector name is required'); return; }
+
+    try {
+      await fetchJSON(`${API_URL}/sectors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      newSectorNameInput.value = '';
+      showSuccessModal('Sector created successfully!', loadSectors);
+    } catch (e) {
+      showSuccessModal('Error creating sector: ' + e.message);
+    }
+  });
+
+  newSectorNameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') createSectorBtn.click();
+  });
+
+  // ---------- Products Modal (read-only view) ----------
   window.showProductsModal = async (sectorId, sectorName) => {
     currentSectorId = sectorId;
     selectedSectorName.textContent = sectorName;
@@ -99,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
       productsModal.style.display = 'block';
     } catch (e) {
       productsListContainer.innerHTML = '<p style="color:red;">Could not load products.</p>';
+      productsModal.style.display = 'block';
     }
   };
 
@@ -115,48 +132,39 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${p.name}</td>
         <td>${p.unit}</td>
         <td>${p.quantity ?? 0}</td>
-        <td>${p.inventory ?? 0}</td>
         <td>${p.cost_per_unit > 0 ? parseFloat(p.cost_per_unit).toFixed(2) : '—'}</td>
         <td>${p.supplier || '—'}</td>
-        <td>
-          <div class="action-buttons-cell">
-            <button class="btn-action btn-editar" onclick="window.editProduct(${p.id}, '${p.name}', '${p.unit}', ${p.quantity ?? 0}, ${p.inventory ?? 0}, ${p.cost_per_unit ?? 0}, '${(p.supplier || '').replace(/'/g, "\\'")}')">Edit</button>
-            <button class="btn-action btn-excluir" onclick="window.confirmDelete('product', ${p.id})">Delete</button>
-          </div>
-        </td>
       </tr>
     `).join('');
 
     productsListContainer.innerHTML = `
       <table class="admin-list-table">
-        <thead><tr><th>ID</th><th>Name</th><th>Unit</th><th>Qty</th><th>Inventory</th><th>Cost/Unit</th><th>Supplier</th><th>Actions</th></tr></thead>
+        <thead><tr><th>ID</th><th>Name</th><th>Unit</th><th>Qty</th><th>Cost/Unit</th><th>Supplier</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
+      <p style="margin-top: 1rem; font-size: 0.9em; color: #666;">
+        To manage products, go to the <a href="/product-entry">Products</a> page.
+      </p>
     `;
   }
 
-  // ---------- Delete Confirmation ----------
-  window.confirmDelete = (type, id) => {
-    const item = type === 'sector' ? 'sector' : 'product';
-    showConfirmModal(`Are you sure you want to delete this ${item}?`, async () => {
+  // ---------- Delete Sector ----------
+  window.confirmDelete = (sectorId) => {
+    showConfirmModal('Are you sure you want to delete this sector?', async () => {
       try {
-        const url = type === 'sector'
-          ? `${API_URL}/sectors/${id}`
-          : `${API_URL}/admin/products/${id}`;
-        await fetchJSON(url, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
-        showSuccessModal(`${item.charAt(0).toUpperCase() + item.slice(1)} deleted successfully!`, () => {
-          if (type === 'sector') {
-            loadSectors();
-            if (currentSectorId === id) {
-              productsModal.style.display = 'none';
-              currentSectorId = null;
-            }
-          } else {
-            showProductsModal(currentSectorId, selectedSectorName.textContent);
+        await fetchJSON(`${API_URL}/sectors/${sectorId}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        showSuccessModal('Sector deleted successfully!', () => {
+          if (currentSectorId === sectorId) {
+            productsModal.style.display = 'none';
+            currentSectorId = null;
           }
+          loadSectors();
         });
       } catch (e) {
-        showSuccessModal(`Error deleting ${item}: ${e.message}`);
+        showSuccessModal('Error deleting sector: ' + e.message);
       }
     });
   };
@@ -185,47 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     } catch (e) {
       showSuccessModal('Error saving sector: ' + e.message);
-    }
-  });
-
-  // ---------- Edit Product ----------
-  window.editProduct = (id, name, unit, quantity, inventory, cost_per_unit, supplier) => {
-    currentProductId = id;
-    editProductNameInput.value = name;
-    editProductUnitInput.value = unit;
-    document.getElementById('edit-product-quantity').value = quantity ?? 0;
-    document.getElementById('edit-product-inventory').value = inventory ?? 0;
-    document.getElementById('edit-product-cost').value = cost_per_unit ?? 0;
-    document.getElementById('edit-product-supplier').value = supplier || '';
-    editModal.style.display = 'block';
-  };
-
-  saveEditBtn.addEventListener('click', async () => {
-    const data = {
-      name: editProductNameInput.value.trim(),
-      unit: editProductUnitInput.value.trim(),
-      quantity: parseFloat(document.getElementById('edit-product-quantity').value) || 0,
-      inventory: parseFloat(document.getElementById('edit-product-inventory').value) || 0,
-      cost_per_unit: parseFloat(document.getElementById('edit-product-cost').value) || 0,
-      supplier: document.getElementById('edit-product-supplier').value.trim()
-    };
-    if (!data.name || !data.unit) {
-      showSuccessModal('Product name and unit are required');
-      return;
-    }
-
-    try {
-      await fetchJSON(`${API_URL}/admin/products/${currentProductId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, sector_id: currentSectorId })
-      });
-      editModal.style.display = 'none';
-      showSuccessModal('Product saved successfully!', () => {
-        showProductsModal(currentSectorId, selectedSectorName.textContent);
-      });
-    } catch (e) {
-      showSuccessModal('Error saving product: ' + e.message);
     }
   });
 

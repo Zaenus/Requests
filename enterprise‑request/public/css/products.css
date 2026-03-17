@@ -388,3 +388,12 @@ body {
 .btn.btn-primary:hover {
     filter: brightness(90%);
 }
+.create-sector-row {
+    display: flex;
+    gap: 1em;
+    align-items: flex-end;
+}
+
+.required {
+    color: #dc3545;
+}
