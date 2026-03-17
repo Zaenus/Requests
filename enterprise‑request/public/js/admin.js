@@ -81,28 +81,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   const isAdminPage = !!document.getElementById('admin-content');
 
   if (isAdminPage) {
-    const saveSectorBtn = document.getElementById('save-sector-btn');
     const saveProductBtn = document.getElementById('save-product-btn');
     const sectorSelect = document.getElementById('product-sector-select');
     const productSelect = document.getElementById('product-select');
     const quantityInput = document.getElementById('product-quantity');
+    const costInput = document.getElementById('product-cost');
+    const supplierInput = document.getElementById('product-supplier');
+    const supplierCnpjInput = document.getElementById('product-supplier-cnpj');
 
-    // ---- Create / Update Sector ----
-    saveSectorBtn?.addEventListener('click', async () => {
-      const name = document.getElementById('sector-name').value.trim();
-      if (!name) { showModal('Error', 'Sector name is required', true); return; }
+    function setProductFieldsDisabled(disabled) {
+      if (quantityInput) quantityInput.disabled = disabled;
+      if (costInput) costInput.disabled = disabled;
+      if (supplierInput) supplierInput.disabled = disabled;
+      if (supplierCnpjInput) supplierCnpjInput.disabled = disabled;
+      if (saveProductBtn) saveProductBtn.disabled = disabled;
+    }
 
-      try {
-        await fetchJSON(`${API_URL}/sectors`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name })
-        });
-        document.getElementById('sector-name').value = '';
-        await loadSectors();
-        showModal('Success', 'Sector registered successfully!');
-      } catch (e) { showModal('Error', e.message, true); }
-    });
+    function clearProductFields() {
+      if (quantityInput) quantityInput.value = '';
+      if (costInput) costInput.value = '';
+      if (supplierInput) supplierInput.value = '';
+      if (supplierCnpjInput) supplierCnpjInput.value = '';
+    }
 
     // ---- Load products when sector changes ----
     sectorSelect?.addEventListener('change', async () => {
@@ -112,8 +112,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!sectorId) {
         productSelect.innerHTML = '<option value="">Select a sector first...</option>';
         productSelect.disabled = true;
-        if (quantityInput) quantityInput.disabled = true;
-        if (saveProductBtn) saveProductBtn.disabled = true;
+        clearProductFields();
+        setProductFieldsDisabled(true);
         return;
       }
 
@@ -124,30 +124,39 @@ document.addEventListener('DOMContentLoaded', async () => {
           productSelect.disabled = true;
         } else {
           productSelect.innerHTML = '<option value="">Select a product...</option>' +
-            products.map(p => `<option value="${p.id}" data-quantity="${p.quantity ?? 0}">${p.name} (${p.unit}) — Stock: ${p.quantity ?? 0}</option>`).join('');
+            products.map(p => `<option value="${p.id}" data-quantity="${p.quantity ?? 0}" data-cost="${p.cost_per_unit ?? 0}" data-supplier="${p.supplier ?? ''}" data-supplier-cnpj="${p.supplier_cnpj ?? ''}">${p.name} (${p.unit}) — Stock: ${p.quantity ?? 0}</option>`).join('');
           productSelect.disabled = false;
         }
-        if (quantityInput) { quantityInput.value = ''; quantityInput.disabled = true; }
-        if (saveProductBtn) saveProductBtn.disabled = true;
+        clearProductFields();
+        setProductFieldsDisabled(true);
       } catch (e) {
         showModal('Error', e.message, true);
       }
     });
 
-    // ---- Enable quantity input when product is selected ----
+    // ---- Pre-fill fields when product is selected ----
     productSelect?.addEventListener('change', () => {
+      const selected = productSelect.options[productSelect.selectedIndex];
       const hasProduct = !!productSelect.value;
-      if (quantityInput) { quantityInput.disabled = !hasProduct; if (!hasProduct) quantityInput.value = ''; }
-      if (saveProductBtn) saveProductBtn.disabled = !hasProduct;
+      if (hasProduct) {
+        if (quantityInput) { quantityInput.value = ''; quantityInput.disabled = false; }
+        if (costInput) { costInput.value = selected.dataset.cost || ''; costInput.disabled = false; }
+        if (supplierInput) { supplierInput.value = selected.dataset.supplier || ''; supplierInput.disabled = false; }
+        if (supplierCnpjInput) { supplierCnpjInput.value = selected.dataset.supplierCnpj || ''; supplierCnpjInput.disabled = false; }
+        if (saveProductBtn) saveProductBtn.disabled = false;
+      } else {
+        clearProductFields();
+        setProductFieldsDisabled(true);
+      }
     });
 
-    // ---- Add quantity to selected product ----
+    // ---- Save product details (quantity add + supplier/cost update) ----
     saveProductBtn?.addEventListener('click', async () => {
       const productId = productSelect?.value;
       const addQty = parseFloat(quantityInput?.value || '0');
 
       if (!productId) { showModal('Error', 'Please select a product', true); return; }
-      if (isNaN(addQty) || addQty <= 0) { showModal('Error', 'Please enter a valid quantity greater than 0', true); return; }
+      if (isNaN(addQty) || addQty < 0) { showModal('Error', 'Please enter a valid quantity (0 or greater)', true); return; }
 
       try {
         // Get current product data
@@ -156,6 +165,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!product) { showModal('Error', 'Product not found', true); return; }
 
         const newQuantity = (product.quantity ?? 0) + addQty;
+        const newCost = costInput?.value !== '' ? parseFloat(costInput?.value || '0') : (product.cost_per_unit ?? 0);
+        const newSupplier = supplierInput?.value.trim() ?? (product.supplier ?? '');
+        const newSupplierCnpj = supplierCnpjInput?.value.trim() ?? (product.supplier_cnpj ?? '');
 
         await fetchJSON(`${API_URL}/admin/products/${productId}`, {
           method: 'PUT',
@@ -165,15 +177,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             name: product.name,
             unit: product.unit,
             quantity: newQuantity,
-            cost_per_unit: product.cost_per_unit ?? 0,
-            supplier: product.supplier ?? ''
+            cost_per_unit: newCost,
+            supplier: newSupplier,
+            supplier_cnpj: newSupplierCnpj
           })
         });
 
         // Refresh the product dropdown to reflect updated stock
         if (sectorSelect.value) sectorSelect.dispatchEvent(new Event('change'));
-        if (quantityInput) quantityInput.value = '';
-        showModal('Success', `Added ${addQty} to ${product.name}. New stock: ${newQuantity}.`);
+        showModal('Success', `Product updated. New stock: ${newQuantity}.`);
       } catch (e) { showModal('Error', e.message, true); }
     });
   }
