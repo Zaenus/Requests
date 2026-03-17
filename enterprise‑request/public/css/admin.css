@@ -213,6 +213,9 @@ body {
 .btn-confirmar { background-color: #28a745; }
 .btn-recusar { background-color: #dc3545; }
 
+.btn-editar { background-color: #286aa7; }
+.btn-excluir { background-color: #dc3545; }
+
 .btn-imprimir:hover { background-color: var(--primary-dark); }
 .btn-confirmar:hover { background-color: #218838; }
 .btn-recusar:hover { background-color: #b32d3d; }
