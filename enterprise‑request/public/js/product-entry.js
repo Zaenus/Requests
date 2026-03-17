@@ -92,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${p.sector_name || ''}</td>
         <td>${p.name}</td>
         <td>${p.unit}</td>
+        <td>${p.quantity ?? 0}</td>
         <td>
           <div class="action-buttons-cell">
             <button class="btn-action btn-editar" data-id="${p.id}">Edit</button>
