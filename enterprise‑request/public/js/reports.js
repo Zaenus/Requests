@@ -68,6 +68,7 @@ async function loadReport() {
 
         if (rows.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No items found.</td></tr>';
+            updateCostSummary([]);
             return;
         }
 
@@ -84,13 +85,29 @@ async function loadReport() {
             </tr>
         `).join('');
 
+        updateCostSummary(rows);
+
         // Auto-open summary if visible
         if (document.getElementById('monthly-summary').style.display === 'block') {
             renderMonthlySummary();
         }
     } catch (e) {
         tbody.innerHTML = `<tr><td colspan="8" style="color:red;">${e.message}</td></tr>`;
+        updateCostSummary([]);
     }
+}
+
+/* ---------- COST SUMMARY ---------- */
+function updateCostSummary(rows) {
+    const bar = document.getElementById('cost-summary');
+    if (!rows.length) {
+        bar.style.display = 'none';
+        return;
+    }
+    const grandTotal = rows.reduce((sum, r) => sum + (r.total_cost || 0), 0);
+    document.getElementById('cost-summary-count').textContent = rows.length;
+    document.getElementById('cost-summary-total').textContent = `$ ${grandTotal.toFixed(2)}`;
+    bar.style.display = 'flex';
 }
 
 /* ---------- RENDER MONTHLY SUMMARY ---------- */
