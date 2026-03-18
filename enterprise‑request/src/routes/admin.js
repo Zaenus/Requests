@@ -39,6 +39,13 @@ const itemQuantitySchema = z.object({
   quantity: z.number({ coerce: true }).int().nonnegative('quantity must be non-negative')
 });
 
+const xmlQuantitySchema = z.object({
+  items: z.array(z.object({
+    code: z.string().min(1, 'code required'),
+    quantity: z.number({ coerce: true }).nonnegative('quantity must be non-negative')
+  })).min(1, 'items array must not be empty')
+});
+
 /**
  * @openapi
  * /api/admin/products:
@@ -469,6 +476,70 @@ router.delete('/request_items/:request_id/:product_id', async (req, res) => {
     );
     if (changes === 0) return res.status(404).json({ error: 'Request item not found' });
     res.status(200).json({ message: 'Request item deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * @openapi
+ * /api/admin/products/xml-quantity:
+ *   post:
+ *     summary: Bulk-update product quantities from an XML import
+ *     tags: [Admin - Products]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [items]
+ *             properties:
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: [code, quantity]
+ *                   properties:
+ *                     code:
+ *                       type: string
+ *                     quantity:
+ *                       type: number
+ *     responses:
+ *       200:
+ *         description: Summary of updated and not-found products
+ *       400:
+ *         description: Validation error
+ */
+router.post('/products/xml-quantity', async (req, res) => {
+  const parsed = xmlQuantitySchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.issues[0].message });
+  }
+  const { items } = parsed.data;
+
+  const updated = [];
+  const not_found = [];
+
+  try {
+    for (const item of items) {
+      const product = await db.getAsync(
+        'SELECT id, name FROM products WHERE code = ?',
+        [item.code]
+      );
+      if (!product) {
+        not_found.push(item.code);
+        continue;
+      }
+      await db.runAsync(
+        'UPDATE products SET quantity = ? WHERE id = ?',
+        [item.quantity, product.id]
+      );
+      updated.push({ code: item.code, product_id: product.id, name: product.name, new_quantity: item.quantity });
+    }
+    res.json({ updated, not_found });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
