@@ -163,10 +163,10 @@
             <h3>Import Quantities from XML</h3>
             <p>Select an XML file containing product codes and quantities. Products are matched by their <strong>Code</strong> field.</p>
             <p style="font-size:0.85rem; color:#666;">Supported formats:
-                <code style="display:block; background:#f5f5f5; padding:6px; margin-top:4px; font-size:0.8rem;">&lt;products&gt;<br>&nbsp;&nbsp;&lt;product&gt;<br>&nbsp;&nbsp;&nbsp;&nbsp;&lt;code&gt;SKU-001&lt;/code&gt;<br>&nbsp;&nbsp;&nbsp;&nbsp;&lt;quantity&gt;100&lt;/quantity&gt;<br>&nbsp;&nbsp;&lt;/product&gt;<br>&lt;/products&gt;</code>
-                or attribute-based: <code>&lt;product code="SKU-001" quantity="100"/&gt;</code>
+                <code style="display:block; background:#f5f5f5; padding:6px; margin-top:4px; font-size:0.8rem;">&lt;products&gt;<br>&nbsp;&nbsp;&lt;product&gt;<br>&nbsp;&nbsp;&nbsp;&nbsp;&lt;code&gt;SKU-001&lt;/code&gt;<br>&nbsp;&nbsp;&nbsp;&nbsp;&lt;quantity&gt;100&lt;/quantity&gt;<br>&nbsp;&nbsp;&nbsp;&nbsp;&lt;cost_per_unit&gt;9.99&lt;/cost_per_unit&gt;<br>&nbsp;&nbsp;&lt;/product&gt;<br>&lt;/products&gt;</code>
+                or attribute-based: <code>&lt;product code="SKU-001" quantity="100" cost_per_unit="9.99"/&gt;</code>
             </p>
-            <p style="font-size:0.85rem; color:#666; margin-top:0.25rem;">Also accepts <code>&lt;cProd&gt;</code> in place of <code>&lt;code&gt;</code> and <code>&lt;qCom&gt;</code> in place of <code>&lt;quantity&gt;</code>.</p>
+            <p style="font-size:0.85rem; color:#666; margin-top:0.25rem;">Also accepts <code>&lt;cProd&gt;</code> in place of <code>&lt;code&gt;</code>, <code>&lt;qCom&gt;</code> in place of <code>&lt;quantity&gt;</code>, and <code>&lt;vUnCom&gt;</code> in place of <code>&lt;cost_per_unit&gt;</code>. The <code>cost_per_unit</code> field is optional.</p>
             <div class="input-group" style="margin-top:1rem;">
                 <label for="xml-file-input">XML File <span class="required">*</span></label>
                 <input type="file" id="xml-file-input" accept=".xml,application/xml,text/xml">
