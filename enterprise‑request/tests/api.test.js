@@ -282,3 +282,55 @@ describe('PUT /api/admin/requests/:id — quantity reduction on approval', () =>
     expect(await getProductQuantity(productId)).toBe(65); // unchanged
   });
 });
+
+// ─── Product code field ────────────────────────────────────────────────────────
+
+describe('POST /api/admin/products — code field', () => {
+  let sectorId;
+
+  beforeAll(async () => {
+    const res = await asAdmin('post', '/api/sectors')
+      .send({ name: `CodeSector-${Date.now()}` });
+    expect(res.status).toBe(201);
+    sectorId = res.body.id;
+  });
+
+  it('creates a product with a code', async () => {
+    const res = await asAdmin('post', '/api/admin/products')
+      .send({ sector_id: sectorId, name: 'Coded-Product', unit: 'pcs', code: 'SKU-001' });
+    expect(res.status).toBe(201);
+    expect(res.body.code).toBe('SKU-001');
+  });
+
+  it('creates a product without a code (defaults to empty string)', async () => {
+    const res = await asAdmin('post', '/api/admin/products')
+      .send({ sector_id: sectorId, name: 'No-Code-Product', unit: 'pcs' });
+    expect(res.status).toBe(201);
+    expect(res.body.code).toBe('');
+  });
+
+  it('updates a product code via PUT', async () => {
+    const createRes = await asAdmin('post', '/api/admin/products')
+      .send({ sector_id: sectorId, name: 'Update-Code-Product', unit: 'pcs', code: 'OLD-001' });
+    expect(createRes.status).toBe(201);
+    const productId = createRes.body.id;
+
+    const updateRes = await asAdmin('put', `/api/admin/products/${productId}`)
+      .send({ sector_id: sectorId, name: 'Update-Code-Product', unit: 'pcs', code: 'NEW-002' });
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body.code).toBe('NEW-002');
+  });
+
+  it('returns the code field in the product list', async () => {
+    const createRes = await asAdmin('post', '/api/admin/products')
+      .send({ sector_id: sectorId, name: 'Listed-Code-Product', unit: 'pcs', code: 'LIST-003' });
+    expect(createRes.status).toBe(201);
+    const productId = createRes.body.id;
+
+    const listRes = await asAdmin('get', '/api/admin/products');
+    expect(listRes.status).toBe(200);
+    const found = listRes.body.find(p => p.id === productId);
+    expect(found).toBeDefined();
+    expect(found.code).toBe('LIST-003');
+  });
+});

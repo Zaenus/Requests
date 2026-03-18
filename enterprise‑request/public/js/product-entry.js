@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const sectorSelect         = document.getElementById('product-sector-select');
   const nameInput            = document.getElementById('product-name');
   const unitInput            = document.getElementById('product-unit');
+  const codeInput            = document.getElementById('product-code');
   const saveBtn              = document.getElementById('save-product-btn');
   const clearBtn             = document.getElementById('clear-form-btn');
   const newProductBtn        = document.getElementById('new-product-btn');
@@ -92,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${p.sector_name || ''}</td>
         <td>${p.name}</td>
         <td>${p.unit}</td>
+        <td>${p.code || ''}</td>
         <td>${p.quantity ?? 0}</td>
         <td>
           <div class="action-buttons-cell">
@@ -120,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sectorSelect.value    = '';
     nameInput.value       = '';
     unitInput.value       = '';
+    codeInput.value       = '';
     formTitle.textContent = 'Edit Product';
     saveBtn.textContent   = 'Update Product';
     saveBtn.disabled      = true;
@@ -131,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sectorSelect.value    = '';
     nameInput.value       = '';
     unitInput.value       = '';
+    codeInput.value       = '';
     formTitle.textContent = 'New Product';
     saveBtn.textContent   = 'Create Product';
     saveBtn.disabled      = false;
@@ -146,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sectorSelect.value    = p.sector_id;
     nameInput.value       = p.name;
     unitInput.value       = p.unit;
+    codeInput.value       = p.code || '';
     formTitle.textContent = 'Edit Product';
     saveBtn.textContent   = 'Update Product';
     saveBtn.disabled      = false;
@@ -164,6 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sector_id = sectorSelect.value;
     const name      = nameInput.value.trim();
     const unit      = unitInput.value.trim();
+    const code      = codeInput.value.trim();
 
     if (!sector_id || !name || !unit) {
       showMessage('Validation Error', 'Sector, name and unit are required.', true);
@@ -181,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sector_id,
             name,
             unit,
+            code,
             quantity: existing ? (existing.quantity ?? 0) : 0,
             cost_per_unit: existing ? (existing.cost_per_unit ?? 0) : 0,
             supplier: existing ? (existing.supplier ?? '') : '',
@@ -195,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await fetchJSON(`${API_URL}/admin/products`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sector_id, name, unit })
+          body: JSON.stringify({ sector_id, name, unit, code })
         });
         clearForm();
         await loadProducts();
