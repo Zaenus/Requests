@@ -188,6 +188,128 @@ document.addEventListener('DOMContentLoaded', async () => {
         showModal('Success', `Product updated. New stock: ${newQuantity}.`);
       } catch (e) { showModal('Error', e.message, true); }
     });
+
+    // ---- XML import ----
+    let parsedXmlItems = [];
+
+    function parseXmlItems(xmlText) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xmlText, 'application/xml');
+      const parseError = doc.querySelector('parsererror');
+      if (parseError) throw new Error('Invalid XML file: ' + parseError.textContent.split('\n')[0]);
+
+      const items = [];
+      doc.querySelectorAll('product').forEach(product => {
+        let code, quantity;
+        const codeEl     = product.querySelector('code');
+        const quantityEl = product.querySelector('quantity');
+        if (codeEl && quantityEl) {
+          code     = codeEl.textContent.trim();
+          quantity = parseFloat(quantityEl.textContent.trim());
+        } else {
+          code     = product.getAttribute('code');
+          quantity = parseFloat(product.getAttribute('quantity'));
+        }
+        if (code && !isNaN(quantity) && quantity >= 0) {
+          items.push({ code, quantity });
+        }
+      });
+      return items;
+    }
+
+    const xmlUploadBtn      = document.getElementById('xml-upload-btn');
+    const xmlImportModal    = document.getElementById('xml-import-modal');
+    const xmlModalClose     = document.getElementById('xml-modal-close');
+    const xmlModalCancelBtn = document.getElementById('xml-modal-cancel-btn');
+    const xmlFileInput      = document.getElementById('xml-file-input');
+    const xmlPreview        = document.getElementById('xml-preview');
+    const xmlPreviewTitle   = document.getElementById('xml-preview-title');
+    const xmlPreviewList    = document.getElementById('xml-preview-list');
+    const xmlApplyBtn       = document.getElementById('xml-apply-btn');
+    const xmlResultsModal   = document.getElementById('xml-results-modal');
+    const xmlResultsClose   = document.getElementById('xml-results-close');
+    const xmlResultsContent = document.getElementById('xml-results-content');
+    const xmlResultsOkBtn   = document.getElementById('xml-results-ok-btn');
+
+    const closeXmlImportModal  = () => { xmlImportModal.style.display = 'none'; };
+    const closeXmlResultsModal = () => { xmlResultsModal.style.display = 'none'; };
+
+    xmlUploadBtn?.addEventListener('click', () => {
+      xmlFileInput.value = '';
+      xmlPreview.style.display = 'none';
+      xmlApplyBtn.disabled = true;
+      parsedXmlItems = [];
+      xmlImportModal.style.display = 'flex';
+    });
+
+    xmlModalClose?.addEventListener('click', closeXmlImportModal);
+    xmlModalCancelBtn?.addEventListener('click', closeXmlImportModal);
+
+    xmlFileInput?.addEventListener('change', () => {
+      const file = xmlFileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          parsedXmlItems = parseXmlItems(e.target.result);
+          if (parsedXmlItems.length === 0) {
+            xmlPreviewTitle.textContent = 'No valid products found in the file.';
+            xmlPreviewList.innerHTML = '';
+            xmlApplyBtn.disabled = true;
+          } else {
+            xmlPreviewTitle.textContent = `${parsedXmlItems.length} product(s) found:`;
+            xmlPreviewList.innerHTML = parsedXmlItems
+              .map(i => `<div><strong>${i.code}</strong> → quantity: ${i.quantity}</div>`)
+              .join('');
+            xmlApplyBtn.disabled = false;
+          }
+          xmlPreview.style.display = 'block';
+        } catch (err) {
+          xmlPreviewTitle.textContent = 'Error parsing file:';
+          xmlPreviewList.textContent = err.message;
+          xmlPreview.style.display = 'block';
+          xmlApplyBtn.disabled = true;
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    xmlApplyBtn?.addEventListener('click', async () => {
+      if (!parsedXmlItems.length) return;
+      xmlApplyBtn.disabled = true;
+      try {
+        const result = await fetchJSON(`${API_URL}/admin/products/xml-quantity`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: parsedXmlItems })
+        });
+
+        closeXmlImportModal();
+
+        // Refresh product dropdown if a sector is selected
+        if (sectorSelect?.value) sectorSelect.dispatchEvent(new Event('change'));
+
+        let html = '';
+        if (result.updated.length > 0) {
+          html += `<p><strong>${result.updated.length} product(s) updated:</strong></p>`;
+          html += '<ul>' + result.updated.map(u =>
+            `<li><strong>${u.code}</strong> — ${u.name}: quantity set to ${u.new_quantity}</li>`
+          ).join('') + '</ul>';
+        }
+        if (result.not_found.length > 0) {
+          html += `<p style="margin-top:0.75rem;"><strong>${result.not_found.length} code(s) not found in the system:</strong></p>`;
+          html += '<ul>' + result.not_found.map(c => `<li>${c}</li>`).join('') + '</ul>';
+        }
+        xmlResultsContent.innerHTML = html || '<p>No products were changed.</p>';
+        xmlResultsModal.style.display = 'flex';
+      } catch (err) {
+        xmlApplyBtn.disabled = false;
+        showModal('Import Error', err.message, true);
+      }
+    });
+
+    xmlResultsClose?.addEventListener('click', closeXmlResultsModal);
+    xmlResultsOkBtn?.addEventListener('click', closeXmlResultsModal);
   }
 
   // ---------- Navigation ----------
