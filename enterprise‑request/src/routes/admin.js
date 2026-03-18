@@ -13,7 +13,8 @@ const productSchema = z.object({
   supplier_cnpj: z.string().optional().default('').refine(
     v => v === '' || /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(v) || /^\d{14}$/.test(v),
     { message: 'supplier_cnpj must be a valid CNPJ (e.g. 12.345.678/0001-90 or 14 digits)' }
-  )
+  ),
+  code: z.string().optional().default('')
 });
 
 const productUpdateSchema = z.object({
@@ -26,7 +27,8 @@ const productUpdateSchema = z.object({
   supplier_cnpj: z.string().optional().default('').refine(
     v => v === '' || /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(v) || /^\d{14}$/.test(v),
     { message: 'supplier_cnpj must be a valid CNPJ (e.g. 12.345.678/0001-90 or 14 digits)' }
-  )
+  ),
+  code: z.string().optional().default('')
 });
 
 const requestStatusSchema = z.object({
@@ -258,14 +260,14 @@ router.post('/products', async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.issues[0].message });
   }
-  const { sector_id, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj } = parsed.data;
+  const { sector_id, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj, code } = parsed.data;
 
   try {
     const { lastID } = await db.runAsync(
-      'INSERT INTO products (sector_id, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [sector_id, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj]
+      'INSERT INTO products (sector_id, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj, code) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [sector_id, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj, code]
     );
-    res.status(201).json({ id: lastID, sector_id, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj });
+    res.status(201).json({ id: lastID, sector_id, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj, code });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -277,15 +279,15 @@ router.put('/products/:id', async (req, res) => {
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.issues[0].message });
   }
-  const { sector_id, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj } = parsed.data;
+  const { sector_id, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj, code } = parsed.data;
 
   try {
     const { changes } = await db.runAsync(
-      'UPDATE products SET sector_id = ?, name = ?, unit = ?, quantity = ?, cost_per_unit = ?, supplier = ?, supplier_cnpj = ? WHERE id = ?',
-      [sector_id || null, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj, id]
+      'UPDATE products SET sector_id = ?, name = ?, unit = ?, quantity = ?, cost_per_unit = ?, supplier = ?, supplier_cnpj = ?, code = ? WHERE id = ?',
+      [sector_id || null, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj, code, id]
     );
     if (changes === 0) return res.status(404).json({ error: 'Product not found' });
-    res.json({ success: true, id, sector_id, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj });
+    res.json({ success: true, id, sector_id, name, unit, quantity, cost_per_unit, supplier, supplier_cnpj, code });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

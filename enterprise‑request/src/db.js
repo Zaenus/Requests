@@ -63,6 +63,7 @@ const initSchema = () => {
         cost_per_unit REAL DEFAULT 0,
         supplier TEXT DEFAULT '',
         supplier_cnpj TEXT DEFAULT '',
+        code TEXT DEFAULT '',
         FOREIGN KEY(sector_id) REFERENCES sectors(id)
       )
     `);
@@ -72,6 +73,7 @@ const initSchema = () => {
     db.run(`ALTER TABLE products ADD COLUMN cost_per_unit REAL DEFAULT 0`, () => {});
     db.run(`ALTER TABLE products ADD COLUMN supplier TEXT DEFAULT ''`, () => {});
     db.run(`ALTER TABLE products ADD COLUMN supplier_cnpj TEXT DEFAULT ''`, () => {});
+    db.run(`ALTER TABLE products ADD COLUMN code TEXT DEFAULT ''`, () => {});
 
     // Requests
     db.run(`
