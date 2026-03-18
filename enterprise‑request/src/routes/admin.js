@@ -42,7 +42,8 @@ const itemQuantitySchema = z.object({
 const xmlQuantitySchema = z.object({
   items: z.array(z.object({
     code: z.string().min(1, 'code required'),
-    quantity: z.number({ coerce: true }).nonnegative('quantity must be non-negative')
+    quantity: z.number({ coerce: true }).nonnegative('quantity must be non-negative'),
+    cost_per_unit: z.number({ coerce: true }).nonnegative('cost_per_unit must be non-negative').optional()
   })).min(1, 'items array must not be empty')
 });
 
@@ -507,6 +508,8 @@ router.delete('/request_items/:request_id/:product_id', async (req, res) => {
  *                       type: string
  *                     quantity:
  *                       type: number
+ *                     cost_per_unit:
+ *                       type: number
  *     responses:
  *       200:
  *         description: Summary of updated and not-found products
@@ -533,11 +536,20 @@ router.post('/products/xml-quantity', async (req, res) => {
         not_found.push(item.code);
         continue;
       }
-      await db.runAsync(
-        'UPDATE products SET quantity = ? WHERE id = ?',
-        [item.quantity, product.id]
-      );
-      updated.push({ code: item.code, product_id: product.id, name: product.name, new_quantity: item.quantity });
+      if (item.cost_per_unit !== undefined) {
+        await db.runAsync(
+          'UPDATE products SET quantity = ?, cost_per_unit = ? WHERE id = ?',
+          [item.quantity, item.cost_per_unit, product.id]
+        );
+      } else {
+        await db.runAsync(
+          'UPDATE products SET quantity = ? WHERE id = ?',
+          [item.quantity, product.id]
+        );
+      }
+      const entry = { code: item.code, product_id: product.id, name: product.name, new_quantity: item.quantity };
+      if (item.cost_per_unit !== undefined) entry.new_cost_per_unit = item.cost_per_unit;
+      updated.push(entry);
     }
     res.json({ updated, not_found });
   } catch (err) {

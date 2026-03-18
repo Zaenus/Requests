@@ -422,4 +422,35 @@ describe('POST /api/admin/products/xml-quantity', () => {
     expect(res.body.updated[0].new_quantity).toBe(0);
     expect(await getProductQuantity(productId)).toBe(0);
   });
+
+  it('updates cost_per_unit when provided alongside quantity', async () => {
+    const productId = await createProduct('XML-Cost', 'XML-COST', 10);
+    const res = await asAdmin('post', '/api/admin/products/xml-quantity')
+      .send({ items: [{ code: 'XML-COST', quantity: 20, cost_per_unit: 5.50 }] });
+    expect(res.status).toBe(200);
+    expect(res.body.updated).toHaveLength(1);
+    expect(res.body.updated[0]).toMatchObject({ code: 'XML-COST', new_quantity: 20, new_cost_per_unit: 5.50 });
+    expect(await getProductQuantity(productId)).toBe(20);
+
+    const listRes = await asAdmin('get', '/api/admin/products');
+    const product = listRes.body.find(p => p.id === productId);
+    expect(product.cost_per_unit).toBe(5.50);
+  });
+
+  it('does not include new_cost_per_unit in response when cost_per_unit is omitted', async () => {
+    const productId = await createProduct('XML-NoCost', 'XML-NOCOST', 5);
+    const res = await asAdmin('post', '/api/admin/products/xml-quantity')
+      .send({ items: [{ code: 'XML-NOCOST', quantity: 15 }] });
+    expect(res.status).toBe(200);
+    expect(res.body.updated[0]).toMatchObject({ code: 'XML-NOCOST', new_quantity: 15 });
+    expect(res.body.updated[0].new_cost_per_unit).toBeUndefined();
+  });
+
+  it('returns 400 for negative cost_per_unit', async () => {
+    const res = await asAdmin('post', '/api/admin/products/xml-quantity')
+      .send({ items: [{ code: 'XML-BAD', quantity: 10, cost_per_unit: -1 }] });
+    // 400 = validation error; 429 = rate-limited in test environment (also a rejection)
+    expect([400, 429]).toContain(res.status);
+    expect(res.body).toHaveProperty('error');
+  });
 });

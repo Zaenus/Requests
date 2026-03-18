@@ -272,18 +272,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const items = [];
     doc.querySelectorAll('product, prod').forEach(product => {
-      let code, quantity;
-      const codeEl    = product.querySelector('code') || product.querySelector('cProd');
-      const quantityEl = product.querySelector('quantity') || product.querySelector('qCom');
+      let code, quantity, cost_per_unit;
+      const codeEl        = product.querySelector('code') || product.querySelector('cProd');
+      const quantityEl    = product.querySelector('quantity') || product.querySelector('qCom');
+      const costEl        = product.querySelector('cost_per_unit') || product.querySelector('vUnCom');
       if (codeEl && quantityEl) {
-        code     = codeEl.textContent.trim();
-        quantity = parseFloat(quantityEl.textContent.trim());
+        code          = codeEl.textContent.trim();
+        quantity      = parseFloat(quantityEl.textContent.trim());
+        cost_per_unit = costEl ? parseFloat(costEl.textContent.trim()) : undefined;
       } else {
-        code     = product.getAttribute('code') || product.getAttribute('cProd');
-        quantity = parseFloat(product.getAttribute('quantity') || product.getAttribute('qCom'));
+        code          = product.getAttribute('code') || product.getAttribute('cProd');
+        quantity      = parseFloat(product.getAttribute('quantity') || product.getAttribute('qCom'));
+        const costAttr = product.getAttribute('cost_per_unit') || product.getAttribute('vUnCom');
+        cost_per_unit = costAttr !== null && costAttr !== undefined ? parseFloat(costAttr) : undefined;
       }
       if (code && !isNaN(quantity) && quantity >= 0) {
-        items.push({ code, quantity });
+        const item = { code, quantity };
+        if (cost_per_unit !== undefined && !isNaN(cost_per_unit) && cost_per_unit >= 0) {
+          item.cost_per_unit = cost_per_unit;
+        }
+        items.push(item);
       }
     });
     return items;
@@ -315,7 +323,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           xmlPreviewTitle.textContent = `${parsedXmlItems.length} product(s) found:`;
           xmlPreviewList.innerHTML = parsedXmlItems
-            .map(i => `<div><strong>${i.code}</strong> → quantity: ${i.quantity}</div>`)
+            .map(i => {
+              let text = `<strong>${i.code}</strong> → quantity: ${i.quantity}`;
+              if (i.cost_per_unit !== undefined) text += `, cost/unit: ${i.cost_per_unit}`;
+              return `<div>${text}</div>`;
+            })
             .join('');
           xmlApplyBtn.disabled = false;
         }
@@ -346,9 +358,11 @@ document.addEventListener('DOMContentLoaded', () => {
       let html = '';
       if (result.updated.length > 0) {
         html += `<p><strong>${result.updated.length} product(s) updated:</strong></p>`;
-        html += '<ul>' + result.updated.map(u =>
-          `<li><strong>${u.code}</strong> — ${u.name}: quantity set to ${u.new_quantity}</li>`
-        ).join('') + '</ul>';
+        html += '<ul>' + result.updated.map(u => {
+          let text = `<strong>${u.code}</strong> — ${u.name}: quantity set to ${u.new_quantity}`;
+          if (u.new_cost_per_unit !== undefined) text += `, cost/unit set to ${u.new_cost_per_unit}`;
+          return `<li>${text}</li>`;
+        }).join('') + '</ul>';
       }
       if (result.not_found.length > 0) {
         html += `<p style="margin-top:0.75rem;"><strong>${result.not_found.length} code(s) not found in the system:</strong></p>`;
