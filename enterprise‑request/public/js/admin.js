@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (parseError) throw new Error('Invalid XML file: ' + parseError.textContent.split('\n')[0]);
 
       const items = [];
-      doc.querySelectorAll('product').forEach(product => {
+      doc.querySelectorAll('product, prod').forEach(product => {
         let code, quantity;
         const codeEl     = product.querySelector('code') || product.querySelector('cProd');
         const quantityEl = product.querySelector('quantity') || product.querySelector('qCom');
