@@ -334,3 +334,92 @@ describe('POST /api/admin/products — code field', () => {
     expect(found.code).toBe('LIST-003');
   });
 });
+
+// ─── XML quantity import ───────────────────────────────────────────────────────
+
+describe('POST /api/admin/products/xml-quantity', () => {
+  let sectorId;
+
+  beforeAll(async () => {
+    const res = await asAdmin('post', '/api/sectors')
+      .send({ name: `XmlSector-${Date.now()}` });
+    expect(res.status).toBe(201);
+    sectorId = res.body.id;
+  });
+
+  const createProduct = async (name, code, quantity = 0) => {
+    const res = await asAdmin('post', '/api/admin/products')
+      .send({ sector_id: sectorId, name, unit: 'pcs', code, quantity });
+    expect(res.status).toBe(201);
+    return res.body.id;
+  };
+
+  const getProductQuantity = async (productId) => {
+    const res = await asAdmin('get', '/api/admin/products');
+    expect(res.status).toBe(200);
+    const product = res.body.find(p => p.id === productId);
+    return product ? product.quantity : null;
+  };
+
+  it('returns 401 without authentication', async () => {
+    const res = await request(app)
+      .post('/api/admin/products/xml-quantity')
+      .send({ items: [{ code: 'X', quantity: 1 }] });
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 400 for empty items array', async () => {
+    const res = await asAdmin('post', '/api/admin/products/xml-quantity')
+      .send({ items: [] });
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('error');
+  });
+
+  it('returns 400 when items field is missing', async () => {
+    const res = await asAdmin('post', '/api/admin/products/xml-quantity')
+      .send({});
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('error');
+  });
+
+  it('updates quantity for a product matched by code', async () => {
+    const productId = await createProduct('XML-Widget', 'XML-001', 10);
+    const res = await asAdmin('post', '/api/admin/products/xml-quantity')
+      .send({ items: [{ code: 'XML-001', quantity: 75 }] });
+    expect(res.status).toBe(200);
+    expect(res.body.updated).toHaveLength(1);
+    expect(res.body.updated[0]).toMatchObject({ code: 'XML-001', new_quantity: 75 });
+    expect(res.body.not_found).toHaveLength(0);
+    expect(await getProductQuantity(productId)).toBe(75);
+  });
+
+  it('reports not_found for codes that do not exist', async () => {
+    const res = await asAdmin('post', '/api/admin/products/xml-quantity')
+      .send({ items: [{ code: 'NONEXISTENT-999', quantity: 5 }] });
+    expect(res.status).toBe(200);
+    expect(res.body.updated).toHaveLength(0);
+    expect(res.body.not_found).toContain('NONEXISTENT-999');
+  });
+
+  it('handles mixed found and not-found codes in one request', async () => {
+    const productId = await createProduct('XML-Mixed', 'XML-MIX', 20);
+    const res = await asAdmin('post', '/api/admin/products/xml-quantity')
+      .send({ items: [
+        { code: 'XML-MIX', quantity: 50 },
+        { code: 'MISSING-CODE', quantity: 3 }
+      ] });
+    expect(res.status).toBe(200);
+    expect(res.body.updated).toHaveLength(1);
+    expect(res.body.not_found).toEqual(['MISSING-CODE']);
+    expect(await getProductQuantity(productId)).toBe(50);
+  });
+
+  it('sets quantity to zero when specified in the import', async () => {
+    const productId = await createProduct('XML-Zero', 'XML-ZERO', 99);
+    const res = await asAdmin('post', '/api/admin/products/xml-quantity')
+      .send({ items: [{ code: 'XML-ZERO', quantity: 0 }] });
+    expect(res.status).toBe(200);
+    expect(res.body.updated[0].new_quantity).toBe(0);
+    expect(await getProductQuantity(productId)).toBe(0);
+  });
+});
