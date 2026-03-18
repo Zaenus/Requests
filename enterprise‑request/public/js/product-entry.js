@@ -273,14 +273,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const items = [];
     doc.querySelectorAll('product').forEach(product => {
       let code, quantity;
-      const codeEl    = product.querySelector('code');
-      const quantityEl = product.querySelector('quantity');
+      const codeEl    = product.querySelector('code') || product.querySelector('cProd');
+      const quantityEl = product.querySelector('quantity') || product.querySelector('qCom');
       if (codeEl && quantityEl) {
         code     = codeEl.textContent.trim();
         quantity = parseFloat(quantityEl.textContent.trim());
       } else {
-        code     = product.getAttribute('code');
-        quantity = parseFloat(product.getAttribute('quantity'));
+        code     = product.getAttribute('code') || product.getAttribute('cProd');
+        quantity = parseFloat(product.getAttribute('quantity') || product.getAttribute('qCom'));
       }
       if (code && !isNaN(quantity) && quantity >= 0) {
         items.push({ code, quantity });
