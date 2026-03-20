@@ -198,11 +198,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       const parseError = doc.querySelector('parsererror');
       if (parseError) throw new Error('Invalid XML file: ' + parseError.textContent.split('\n')[0]);
 
+      // Extract supplier info from <emit> block (NFe standard)
+      const emitEl = doc.querySelector('emit');
+      let docSupplier, docSupplierCnpj;
+      if (emitEl) {
+        const xNomeEl = emitEl.querySelector('xNome');
+        const cnpjEl  = emitEl.querySelector('CNPJ');
+        if (xNomeEl) docSupplier     = xNomeEl.textContent.trim() || undefined;
+        if (cnpjEl)  docSupplierCnpj = cnpjEl.textContent.trim()  || undefined;
+      }
+
       const items = [];
       doc.querySelectorAll('product, prod').forEach(product => {
         let code, quantity;
-        const codeEl     = product.querySelector('code') || product.querySelector('cProd');
-        const quantityEl = product.querySelector('quantity') || product.querySelector('qCom');
+        const codeEl      = product.querySelector('code')         || product.querySelector('cProd');
+        const quantityEl  = product.querySelector('quantity')     || product.querySelector('qCom');
+        const costEl      = product.querySelector('cost_per_unit')|| product.querySelector('vUnCom');
+        const supplierEl  = product.querySelector('supplier');
+        const cnpjEl      = product.querySelector('supplier_cnpj');
         if (codeEl && quantityEl) {
           code     = codeEl.textContent.trim();
           quantity = parseFloat(quantityEl.textContent.trim());
@@ -211,7 +224,26 @@ document.addEventListener('DOMContentLoaded', async () => {
           quantity = parseFloat(product.getAttribute('quantity') || product.getAttribute('qCom'));
         }
         if (code && !isNaN(quantity) && quantity >= 0) {
-          items.push({ code, quantity });
+          const item = { code, quantity };
+          // cost_per_unit
+          if (costEl) {
+            const cost = parseFloat(costEl.textContent.trim());
+            if (!isNaN(cost) && cost >= 0) item.cost_per_unit = cost;
+          } else {
+            const costAttr = parseFloat(product.getAttribute('cost_per_unit') || product.getAttribute('vUnCom'));
+            if (!isNaN(costAttr) && costAttr >= 0) item.cost_per_unit = costAttr;
+          }
+          // supplier (per-product element/attribute wins, then document-level emit)
+          const supplier = (supplierEl && supplierEl.textContent.trim())
+            || product.getAttribute('supplier')
+            || docSupplier;
+          if (supplier) item.supplier = supplier;
+          // supplier_cnpj
+          const supplierCnpj = (cnpjEl && cnpjEl.textContent.trim())
+            || product.getAttribute('supplier_cnpj')
+            || docSupplierCnpj;
+          if (supplierCnpj) item.supplier_cnpj = supplierCnpj;
+          items.push(item);
         }
       });
       return items;
@@ -259,7 +291,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           } else {
             xmlPreviewTitle.textContent = `${parsedXmlItems.length} product(s) found:`;
             xmlPreviewList.innerHTML = parsedXmlItems
-              .map(i => `<div><strong>${i.code}</strong> → quantity: ${i.quantity}</div>`)
+              .map(i => {
+                let parts = [`<strong>${i.code}</strong> → quantity: ${i.quantity}`];
+                if (i.cost_per_unit !== undefined) parts.push(`cost: ${i.cost_per_unit}`);
+                if (i.supplier)      parts.push(`supplier: ${i.supplier}`);
+                if (i.supplier_cnpj) parts.push(`CNPJ: ${i.supplier_cnpj}`);
+                return `<div>${parts.join(', ')}</div>`;
+              })
               .join('');
             xmlApplyBtn.disabled = false;
           }
@@ -292,9 +330,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         let html = '';
         if (result.updated.length > 0) {
           html += `<p><strong>${result.updated.length} product(s) updated:</strong></p>`;
-          html += '<ul>' + result.updated.map(u =>
-            `<li><strong>${u.code}</strong> — ${u.name}: quantity set to ${u.new_quantity}</li>`
-          ).join('') + '</ul>';
+          html += '<ul>' + result.updated.map(u => {
+            let detail = `quantity updated to ${u.new_quantity}`;
+            if (u.new_cost_per_unit !== undefined) detail += `, cost: ${u.new_cost_per_unit}`;
+            if (u.new_supplier)      detail += `, supplier: ${u.new_supplier}`;
+            if (u.new_supplier_cnpj) detail += `, CNPJ: ${u.new_supplier_cnpj}`;
+            return `<li><strong>${u.code}</strong> — ${u.name}: ${detail}</li>`;
+          }).join('') + '</ul>';
         }
         if (result.not_found.length > 0) {
           html += `<p style="margin-top:0.75rem;"><strong>${result.not_found.length} code(s) not found in the system:</strong></p>`;

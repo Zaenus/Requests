@@ -534,7 +534,7 @@ router.post('/products/xml-quantity', async (req, res) => {
   try {
     for (const item of items) {
       const product = await db.getAsync(
-        'SELECT id, name FROM products WHERE code = ?',
+        'SELECT id, name, quantity FROM products WHERE code = ?',
         [item.code]
       );
       if (!product) {
@@ -542,7 +542,7 @@ router.post('/products/xml-quantity', async (req, res) => {
         continue;
       }
 
-      const setClauses = ['quantity = ?'];
+      const setClauses = ['quantity = quantity + ?'];
       const params = [item.quantity];
 
       if (item.cost_per_unit !== undefined) {
@@ -564,7 +564,8 @@ router.post('/products/xml-quantity', async (req, res) => {
         params
       );
 
-      const entry = { code: item.code, product_id: product.id, name: product.name, new_quantity: item.quantity };
+      const newQuantity = product.quantity + item.quantity;
+      const entry = { code: item.code, product_id: product.id, name: product.name, new_quantity: newQuantity };
       if (item.cost_per_unit !== undefined) entry.new_cost_per_unit = item.cost_per_unit;
       if (item.supplier !== undefined) entry.new_supplier = item.supplier;
       if (item.supplier_cnpj !== undefined) entry.new_supplier_cnpj = item.supplier_cnpj;

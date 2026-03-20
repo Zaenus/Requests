@@ -382,15 +382,15 @@ describe('POST /api/admin/products/xml-quantity', () => {
     expect(res.body).toHaveProperty('error');
   });
 
-  it('updates quantity for a product matched by code', async () => {
+  it('adds quantity to a product matched by code', async () => {
     const productId = await createProduct('XML-Widget', 'XML-001', 10);
     const res = await asAdmin('post', '/api/admin/products/xml-quantity')
       .send({ items: [{ code: 'XML-001', quantity: 75 }] });
     expect(res.status).toBe(200);
     expect(res.body.updated).toHaveLength(1);
-    expect(res.body.updated[0]).toMatchObject({ code: 'XML-001', new_quantity: 75 });
+    expect(res.body.updated[0]).toMatchObject({ code: 'XML-001', new_quantity: 85 });
     expect(res.body.not_found).toHaveLength(0);
-    expect(await getProductQuantity(productId)).toBe(75);
+    expect(await getProductQuantity(productId)).toBe(85);
   });
 
   it('reports not_found for codes that do not exist', async () => {
@@ -411,16 +411,16 @@ describe('POST /api/admin/products/xml-quantity', () => {
     expect(res.status).toBe(200);
     expect(res.body.updated).toHaveLength(1);
     expect(res.body.not_found).toEqual(['MISSING-CODE']);
-    expect(await getProductQuantity(productId)).toBe(50);
+    expect(await getProductQuantity(productId)).toBe(70);
   });
 
-  it('sets quantity to zero when specified in the import', async () => {
+  it('adding zero quantity preserves existing quantity', async () => {
     const productId = await createProduct('XML-Zero', 'XML-ZERO', 99);
     const res = await asAdmin('post', '/api/admin/products/xml-quantity')
       .send({ items: [{ code: 'XML-ZERO', quantity: 0 }] });
     expect(res.status).toBe(200);
-    expect(res.body.updated[0].new_quantity).toBe(0);
-    expect(await getProductQuantity(productId)).toBe(0);
+    expect(res.body.updated[0].new_quantity).toBe(99);
+    expect(await getProductQuantity(productId)).toBe(99);
   });
 
   it('updates cost_per_unit when provided alongside quantity', async () => {
@@ -429,8 +429,8 @@ describe('POST /api/admin/products/xml-quantity', () => {
       .send({ items: [{ code: 'XML-COST', quantity: 20, cost_per_unit: 5.50 }] });
     expect(res.status).toBe(200);
     expect(res.body.updated).toHaveLength(1);
-    expect(res.body.updated[0]).toMatchObject({ code: 'XML-COST', new_quantity: 20, new_cost_per_unit: 5.50 });
-    expect(await getProductQuantity(productId)).toBe(20);
+    expect(res.body.updated[0]).toMatchObject({ code: 'XML-COST', new_quantity: 30, new_cost_per_unit: 5.50 });
+    expect(await getProductQuantity(productId)).toBe(30);
 
     const listRes = await asAdmin('get', '/api/admin/products');
     const product = listRes.body.find(p => p.id === productId);
@@ -442,7 +442,7 @@ describe('POST /api/admin/products/xml-quantity', () => {
     const res = await asAdmin('post', '/api/admin/products/xml-quantity')
       .send({ items: [{ code: 'XML-NOCOST', quantity: 15 }] });
     expect(res.status).toBe(200);
-    expect(res.body.updated[0]).toMatchObject({ code: 'XML-NOCOST', new_quantity: 15 });
+    expect(res.body.updated[0]).toMatchObject({ code: 'XML-NOCOST', new_quantity: 20 });
     expect(res.body.updated[0].new_cost_per_unit).toBeUndefined();
   });
 
@@ -459,7 +459,7 @@ describe('POST /api/admin/products/xml-quantity', () => {
       .send({ items: [{ code: 'XML-SUP', quantity: 30, supplier: 'Acme Corp' }] });
     expect(res.status).toBe(200);
     expect(res.body.updated).toHaveLength(1);
-    expect(res.body.updated[0]).toMatchObject({ code: 'XML-SUP', new_quantity: 30, new_supplier: 'Acme Corp' });
+    expect(res.body.updated[0]).toMatchObject({ code: 'XML-SUP', new_quantity: 40, new_supplier: 'Acme Corp' });
 
     const listRes = await asAdmin('get', '/api/admin/products');
     const product = listRes.body.find(p => p.id === productId);
@@ -472,7 +472,7 @@ describe('POST /api/admin/products/xml-quantity', () => {
       .send({ items: [{ code: 'XML-CNPJ', quantity: 10, supplier_cnpj: '12.345.678/0001-90' }] });
     expect(res.status).toBe(200);
     expect(res.body.updated).toHaveLength(1);
-    expect(res.body.updated[0]).toMatchObject({ code: 'XML-CNPJ', new_quantity: 10, new_supplier_cnpj: '12.345.678/0001-90' });
+    expect(res.body.updated[0]).toMatchObject({ code: 'XML-CNPJ', new_quantity: 15, new_supplier_cnpj: '12.345.678/0001-90' });
 
     const listRes = await asAdmin('get', '/api/admin/products');
     const product = listRes.body.find(p => p.id === productId);
@@ -506,7 +506,7 @@ describe('POST /api/admin/products/xml-quantity', () => {
     const res = await asAdmin('post', '/api/admin/products/xml-quantity')
       .send({ items: [{ code: 'XML-NOSUP', quantity: 15 }] });
     expect(res.status).toBe(200);
-    expect(res.body.updated[0]).toMatchObject({ code: 'XML-NOSUP', new_quantity: 15 });
+    expect(res.body.updated[0]).toMatchObject({ code: 'XML-NOSUP', new_quantity: 20 });
     expect(res.body.updated[0].new_supplier).toBeUndefined();
     expect(res.body.updated[0].new_supplier_cnpj).toBeUndefined();
   });
