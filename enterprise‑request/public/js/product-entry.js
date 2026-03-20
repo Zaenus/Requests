@@ -272,24 +272,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const items = [];
     doc.querySelectorAll('product, prod').forEach(product => {
-      let code, quantity, cost_per_unit;
+      let code, quantity, cost_per_unit, supplier, supplier_cnpj;
       const codeEl        = product.querySelector('code') || product.querySelector('cProd');
       const quantityEl    = product.querySelector('quantity') || product.querySelector('qCom');
       const costEl        = product.querySelector('cost_per_unit') || product.querySelector('vUnCom');
+      const supplierEl    = product.querySelector('supplier') || product.querySelector('xFornec');
+      const cnpjEl        = product.querySelector('supplier_cnpj') || product.querySelector('CNPJ');
       if (codeEl && quantityEl) {
         code          = codeEl.textContent.trim();
         quantity      = parseFloat(quantityEl.textContent.trim());
         cost_per_unit = costEl ? parseFloat(costEl.textContent.trim()) : undefined;
+        supplier      = supplierEl ? supplierEl.textContent.trim() : undefined;
+        supplier_cnpj = cnpjEl ? cnpjEl.textContent.trim() : undefined;
       } else {
         code          = product.getAttribute('code') || product.getAttribute('cProd');
         quantity      = parseFloat(product.getAttribute('quantity') || product.getAttribute('qCom'));
         const costAttr = product.getAttribute('cost_per_unit') || product.getAttribute('vUnCom');
         cost_per_unit = costAttr !== null && costAttr !== undefined ? parseFloat(costAttr) : undefined;
+        const supplierAttr = product.getAttribute('supplier') || product.getAttribute('xFornec');
+        supplier = supplierAttr !== null && supplierAttr !== undefined ? supplierAttr : undefined;
+        const cnpjAttr = product.getAttribute('supplier_cnpj') || product.getAttribute('CNPJ');
+        supplier_cnpj = cnpjAttr !== null && cnpjAttr !== undefined ? cnpjAttr : undefined;
       }
       if (code && !isNaN(quantity) && quantity >= 0) {
         const item = { code, quantity };
         if (cost_per_unit !== undefined && !isNaN(cost_per_unit) && cost_per_unit >= 0) {
           item.cost_per_unit = cost_per_unit;
+        }
+        if (supplier !== undefined && supplier !== '') {
+          item.supplier = supplier;
+        }
+        if (supplier_cnpj !== undefined && supplier_cnpj !== '') {
+          item.supplier_cnpj = supplier_cnpj;
         }
         items.push(item);
       }
@@ -326,6 +340,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .map(i => {
               let text = `<strong>${i.code}</strong> → quantity: ${i.quantity}`;
               if (i.cost_per_unit !== undefined) text += `, cost/unit: ${i.cost_per_unit}`;
+              if (i.supplier !== undefined) text += `, supplier: ${i.supplier}`;
+              if (i.supplier_cnpj !== undefined) text += `, CNPJ: ${i.supplier_cnpj}`;
               return `<div>${text}</div>`;
             })
             .join('');
@@ -361,6 +377,8 @@ document.addEventListener('DOMContentLoaded', () => {
         html += '<ul>' + result.updated.map(u => {
           let text = `<strong>${u.code}</strong> — ${u.name}: quantity set to ${u.new_quantity}`;
           if (u.new_cost_per_unit !== undefined) text += `, cost/unit set to ${u.new_cost_per_unit}`;
+          if (u.new_supplier !== undefined) text += `, supplier set to ${u.new_supplier}`;
+          if (u.new_supplier_cnpj !== undefined) text += `, CNPJ set to ${u.new_supplier_cnpj}`;
           return `<li>${text}</li>`;
         }).join('') + '</ul>';
       }

@@ -43,7 +43,12 @@ const xmlQuantitySchema = z.object({
   items: z.array(z.object({
     code: z.string().min(1, 'code required'),
     quantity: z.number({ coerce: true }).nonnegative('quantity must be non-negative'),
-    cost_per_unit: z.number({ coerce: true }).nonnegative('cost_per_unit must be non-negative').optional()
+    cost_per_unit: z.number({ coerce: true }).nonnegative('cost_per_unit must be non-negative').optional(),
+    supplier: z.string().optional(),
+    supplier_cnpj: z.string().optional().refine(
+      v => v === undefined || v === '' || /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(v) || /^\d{14}$/.test(v),
+      { message: 'supplier_cnpj must be a valid CNPJ (e.g. 12.345.678/0001-90 or 14 digits)' }
+    )
   })).min(1, 'items array must not be empty')
 });
 
@@ -536,19 +541,33 @@ router.post('/products/xml-quantity', async (req, res) => {
         not_found.push(item.code);
         continue;
       }
+
+      const setClauses = ['quantity = ?'];
+      const params = [item.quantity];
+
       if (item.cost_per_unit !== undefined) {
-        await db.runAsync(
-          'UPDATE products SET quantity = ?, cost_per_unit = ? WHERE id = ?',
-          [item.quantity, item.cost_per_unit, product.id]
-        );
-      } else {
-        await db.runAsync(
-          'UPDATE products SET quantity = ? WHERE id = ?',
-          [item.quantity, product.id]
-        );
+        setClauses.push('cost_per_unit = ?');
+        params.push(item.cost_per_unit);
       }
+      if (item.supplier !== undefined) {
+        setClauses.push('supplier = ?');
+        params.push(item.supplier);
+      }
+      if (item.supplier_cnpj !== undefined) {
+        setClauses.push('supplier_cnpj = ?');
+        params.push(item.supplier_cnpj);
+      }
+      params.push(product.id);
+
+      await db.runAsync(
+        `UPDATE products SET ${setClauses.join(', ')} WHERE id = ?`,
+        params
+      );
+
       const entry = { code: item.code, product_id: product.id, name: product.name, new_quantity: item.quantity };
       if (item.cost_per_unit !== undefined) entry.new_cost_per_unit = item.cost_per_unit;
+      if (item.supplier !== undefined) entry.new_supplier = item.supplier;
+      if (item.supplier_cnpj !== undefined) entry.new_supplier_cnpj = item.supplier_cnpj;
       updated.push(entry);
     }
     res.json({ updated, not_found });
