@@ -449,8 +449,72 @@ describe('POST /api/admin/products/xml-quantity', () => {
   it('returns 400 for negative cost_per_unit', async () => {
     const res = await asAdmin('post', '/api/admin/products/xml-quantity')
       .send({ items: [{ code: 'XML-BAD', quantity: 10, cost_per_unit: -1 }] });
-    // 400 = validation error; 429 = rate-limited in test environment (also a rejection)
-    expect([400, 429]).toContain(res.status);
+    expect(res.status).toBe(400);
+    expect(res.body).toHaveProperty('error');
+  });
+
+  it('updates supplier when provided alongside quantity', async () => {
+    const productId = await createProduct('XML-Supplier', 'XML-SUP', 10);
+    const res = await asAdmin('post', '/api/admin/products/xml-quantity')
+      .send({ items: [{ code: 'XML-SUP', quantity: 30, supplier: 'Acme Corp' }] });
+    expect(res.status).toBe(200);
+    expect(res.body.updated).toHaveLength(1);
+    expect(res.body.updated[0]).toMatchObject({ code: 'XML-SUP', new_quantity: 30, new_supplier: 'Acme Corp' });
+
+    const listRes = await asAdmin('get', '/api/admin/products');
+    const product = listRes.body.find(p => p.id === productId);
+    expect(product.supplier).toBe('Acme Corp');
+  });
+
+  it('updates supplier_cnpj when provided alongside quantity', async () => {
+    const productId = await createProduct('XML-CNPJ', 'XML-CNPJ', 5);
+    const res = await asAdmin('post', '/api/admin/products/xml-quantity')
+      .send({ items: [{ code: 'XML-CNPJ', quantity: 10, supplier_cnpj: '12.345.678/0001-90' }] });
+    expect(res.status).toBe(200);
+    expect(res.body.updated).toHaveLength(1);
+    expect(res.body.updated[0]).toMatchObject({ code: 'XML-CNPJ', new_quantity: 10, new_supplier_cnpj: '12.345.678/0001-90' });
+
+    const listRes = await asAdmin('get', '/api/admin/products');
+    const product = listRes.body.find(p => p.id === productId);
+    expect(product.supplier_cnpj).toBe('12.345.678/0001-90');
+  });
+
+  it('updates all fields (quantity, cost_per_unit, supplier, supplier_cnpj) together', async () => {
+    const productId = await createProduct('XML-All', 'XML-ALL', 0);
+    const res = await asAdmin('post', '/api/admin/products/xml-quantity')
+      .send({ items: [{ code: 'XML-ALL', quantity: 50, cost_per_unit: 9.99, supplier: 'Best Supplier', supplier_cnpj: '12345678000190' }] });
+    expect(res.status).toBe(200);
+    expect(res.body.updated).toHaveLength(1);
+    expect(res.body.updated[0]).toMatchObject({
+      code: 'XML-ALL',
+      new_quantity: 50,
+      new_cost_per_unit: 9.99,
+      new_supplier: 'Best Supplier',
+      new_supplier_cnpj: '12345678000190'
+    });
+
+    const listRes = await asAdmin('get', '/api/admin/products');
+    const product = listRes.body.find(p => p.id === productId);
+    expect(product.quantity).toBe(50);
+    expect(product.cost_per_unit).toBe(9.99);
+    expect(product.supplier).toBe('Best Supplier');
+    expect(product.supplier_cnpj).toBe('12345678000190');
+  });
+
+  it('does not include new_supplier in response when supplier is omitted', async () => {
+    const productId = await createProduct('XML-NoSup', 'XML-NOSUP', 5);
+    const res = await asAdmin('post', '/api/admin/products/xml-quantity')
+      .send({ items: [{ code: 'XML-NOSUP', quantity: 15 }] });
+    expect(res.status).toBe(200);
+    expect(res.body.updated[0]).toMatchObject({ code: 'XML-NOSUP', new_quantity: 15 });
+    expect(res.body.updated[0].new_supplier).toBeUndefined();
+    expect(res.body.updated[0].new_supplier_cnpj).toBeUndefined();
+  });
+
+  it('returns 400 for invalid supplier_cnpj format', async () => {
+    const res = await asAdmin('post', '/api/admin/products/xml-quantity')
+      .send({ items: [{ code: 'XML-BADCNPJ', quantity: 10, supplier_cnpj: 'not-a-cnpj' }] });
+    expect(res.status).toBe(400);
     expect(res.body).toHaveProperty('error');
   });
 });
